@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Mushroom icon for mildew proof -->
+  <path d="M12 4C7 4 3 7.5 3 11c0 1.5.5 2.5 1.5 3.5.5.5 1 1 1.5 1.5h12c.5-.5 1-1 1.5-1.5 1-1 1.5-2 1.5-3.5 0-3.5-4-7-8-7z"/>
+  <rect x="9" y="16" width="6" height="5" rx="1"/>
+  <!-- Spots on cap -->
+  <circle cx="9" cy="9" r="1" fill="currentColor"/>
+  <circle cx="14" cy="8" r="0.75" fill="currentColor"/>
+  <circle cx="11" cy="12" r="0.75" fill="currentColor"/>
+  <!-- X through it (prevention) -->
+  <line x1="3" y1="3" x2="21" y2="21" stroke-width="2.5"/>
+</svg>

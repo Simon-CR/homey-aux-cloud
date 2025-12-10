@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Vertical straw broom -->
+  <!-- Handle -->
+  <line x1="12" y1="2" x2="12" y2="14"/>
+  <!-- Binding -->
+  <rect x="9" y="14" width="6" height="2" rx="0.5"/>
+  <!-- Straw bristles -->
+  <path d="M9 16 L7 22"/>
+  <path d="M10 16 L9 22"/>
+  <path d="M11 16 L10.5 22"/>
+  <path d="M12 16 L12 22"/>
+  <path d="M13 16 L13.5 22"/>
+  <path d="M14 16 L15 22"/>
+  <path d="M15 16 L17 22"/>
+</svg>

@@ -1,0 +1,13 @@
+{
+  "type": "boolean",
+  "title": {
+    "en": "Display"
+  },
+  "icon": "/assets/icons/display.svg",
+  "uiComponent": "toggle",
+  "getable": true,
+  "setable": true,
+  "desc": {
+    "en": "LED display on/off"
+  }
+}

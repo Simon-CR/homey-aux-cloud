@@ -1,0 +1,13 @@
+{
+  "type": "boolean",
+  "title": {
+    "en": "Self Clean"
+  },
+  "icon": "/assets/icons/clean.svg",
+  "uiComponent": "toggle",
+  "getable": true,
+  "setable": true,
+  "desc": {
+    "en": "Auto-clean function"
+  }
+}

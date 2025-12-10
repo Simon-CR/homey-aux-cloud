@@ -1,0 +1,19 @@
+{
+  "type": "number",
+  "title": {
+    "en": "Power Limit %"
+  },
+  "icon": "/assets/icons/power.svg",
+  "uiComponent": "slider",
+  "getable": true,
+  "setable": true,
+  "min": 0,
+  "max": 90,
+  "step": 10,
+  "units": {
+    "en": "%"
+  },
+  "desc": {
+    "en": "Maximum power consumption"
+  }
+}

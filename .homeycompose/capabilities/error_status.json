@@ -1,0 +1,12 @@
+{
+  "type": "string",
+  "title": {
+    "en": "Error Status"
+  },
+  "uiComponent": "sensor",
+  "getable": true,
+  "setable": false,
+  "desc": {
+    "en": "Device error flag (0 = no error)"
+  }
+}

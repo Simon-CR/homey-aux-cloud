@@ -6,7 +6,30 @@ Control your AUX Cloud-connected mini-split air conditioners and heat pumps dire
 
 This Homey app allows you to control AUX-branded and compatible mini-split air conditioning units and heat pumps that are connected to the AUX Cloud platform (also known as AC Freedom). The app integrates with the Broadlink-based AUX Cloud service to provide full climate control capabilities.
 
-## Supported Devices
+## ⚠️ Supported Device Types
+
+**This app is designed specifically for HVAC climate control devices:**
+
+### ✅ Supported Devices
+
+| Device Type | Product IDs | Status |
+|-------------|-------------|--------|
+| **Mini-Split Air Conditioners** | `c0620000`, `2a4e0000` | ✅ Full Support |
+| **Heat Pumps (Climate Control)** | `c3aa0000` | ✅ Full Support |
+
+### ❌ NOT Supported
+
+The Broadlink DNA platform (used by AUX Cloud) also connects other device types that are **NOT supported** by this app:
+
+- Dehumidifiers
+- Air purifiers
+- Smart plugs/switches
+- Lighting controls
+- Other non-HVAC devices
+
+If your device uses the AUX Cloud / AC Freedom app but is not a mini-split AC or heat pump, it will not work with this Homey app.
+
+## Compatible Brands
 
 This app works with various mini-split brands that use the AUX Cloud platform, including:
 
@@ -65,15 +88,33 @@ Once configured, your AUX air conditioner will appear as a thermostat device in 
 
 ### Capabilities
 
+The app exposes these capabilities based on what your specific device supports:
+
+**Core Capabilities (All Devices):**
 - `onoff` - Turn the AC on or off
 - `target_temperature` - Set the desired temperature (16-30°C)
 - `measure_temperature` - Current room temperature reading
-- `thermostat_mode` - Operating mode:
-  - `auto` - Automatic mode
-  - `cool` - Cooling mode
-  - `heat` - Heating mode
-  - `dry` - Dehumidification mode
-  - `fan_only` - Fan only (no heating/cooling)
+- `thermostat_mode` - Operating mode (auto, cool, heat, dry, fan_only)
+
+**Extended Capabilities (Device-Dependent):**
+- `fan_speed` - Fan speed (auto, low, medium, high, turbo, mute)
+- `airco_vertical` - Vertical swing/airflow direction
+- `airco_horizontal` - Horizontal swing/airflow direction
+- `eco_mode` - Energy saving mode
+- `health_mode` - Health/ionizer function
+- `sleep_mode` - Sleep mode for quieter nighttime operation
+- `display_light` - Screen display on/off
+- `self_cleaning` - Self-cleaning function
+- `child_lock` - Child lock to prevent tampering
+- `mildew_proof` - Mildew prevention mode
+- `comfortable_wind` - Comfortable wind mode
+- `auxiliary_heat` - Auxiliary/electric heating
+- `power_limit` - Power consumption limit (0-90%)
+- `power_limit_enabled` - Enable/disable power limit
+- `temperature_unit` - Celsius/Fahrenheit display
+- `error_status` - Current error status (read-only)
+
+> **Note:** Not all devices support all capabilities. The app automatically detects which features your specific device supports and only shows those controls.
 
 ## Troubleshooting
 
@@ -103,8 +144,27 @@ Once configured, your AUX air conditioner will appear as a thermostat device in 
 - Ensure you're selecting the correct region
 - Try logging into the AUX Cloud mobile app to verify your credentials
 - Some regions may have temporary service disruptions
+- If you see "Too many attempts", wait 5-10 minutes before trying again
 
 ## Technical Details
+
+### Rate Limiting
+
+The AUX Cloud API enforces rate limits to prevent abuse. This app includes built-in protection:
+
+| Action | Limit | Notes |
+|--------|-------|-------|
+| Login attempts | 10 second cooldown | Between each attempt |
+| API requests | 1 second cooldown | Between each request |
+| Rate limit backoff | 5+ minutes | After receiving a rate limit error |
+| Device polling | 30 seconds | Standard state refresh interval |
+
+**If you get rate limited:**
+- Wait at least 5 minutes before trying again
+- Repeated rate limits increase the backoff exponentially (up to 1 hour)
+- A successful login resets the backoff counter
+
+> **Note:** The exact API rate limits are not publicly documented by Broadlink. These values are conservative estimates based on the Home Assistant integration behavior.
 
 ### API Communication
 
@@ -121,6 +181,43 @@ This app communicates with the AUX Cloud API using the following approach:
 - Some advanced features available in the mobile app may not be implemented yet
 - Device state updates may take up to 30 seconds to reflect in Homey
 - Logging into Homey will log out your session in the AUX Cloud mobile app (and vice versa)
+
+## Contributing: Adding New Device Types
+
+The AUX Cloud / Broadlink DNA platform supports many device types beyond mini-split ACs. If you have an unsupported device and want to help add support, here's how:
+
+### Step 1: Report Your Device
+
+During pairing, the app logs unsupported devices. You can find the product ID in the Homey app logs. Please report it by opening an issue with:
+
+- **Device name/model**
+- **Product ID** (32-character hex string like `000000000000000000000000c0620000`)
+- **Device type** (dehumidifier, air purifier, plug, etc.)
+- **Screenshots** of available controls in the AUX Cloud mobile app
+
+### Step 2: Device Registry
+
+New devices can be added to the `DEVICE_REGISTRY` in `lib/AuxCloudAPI.js`:
+
+```javascript
+'000000000000000000000000XXXXXXXX': {
+  type: 'DEHUMIDIFIER',
+  name: 'Dehumidifier',
+  class: 'fan',
+  driver: 'aux-dehumidifier',
+  supported: true
+}
+```
+
+### Known Product IDs
+
+| Product ID | Device Type | Status |
+|------------|-------------|--------|
+| `c0620000` | Mini-Split AC | ✅ Supported |
+| `2a4e0000` | Mini-Split AC | ✅ Supported |
+| `c3aa0000` | Heat Pump | ✅ Supported |
+
+Help us expand this list by reporting your devices!
 
 ## Credits
 

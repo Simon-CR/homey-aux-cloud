@@ -55,13 +55,29 @@
         "onoff",
         "target_temperature",
         "measure_temperature",
-        "thermostat_mode"
+        "thermostat_mode",
+        "fan_speed",
+        "airco_horizontal",
+        "airco_vertical",
+        "eco_mode",
+        "health_mode",
+        "sleep_mode",
+        "display_light",
+        "self_cleaning",
+        "child_lock",
+        "mildew_proof",
+        "comfortable_wind",
+        "auxiliary_heat",
+        "power_limit",
+        "power_limit_enabled",
+        "temperature_unit",
+        "error_status"
       ],
       "capabilitiesOptions": {
         "target_temperature": {
           "min": 16,
-          "max": 30,
-          "step": 1
+          "max": 32,
+          "step": 0.5
         }
       },
       "energy": {
@@ -112,5 +128,356 @@
       ],
       "id": "aux-ac"
     }
-  ]
+  ],
+  "capabilities": {
+    "airco_horizontal": {
+      "type": "enum",
+      "title": {
+        "en": "Horizontal Swing"
+      },
+      "uiComponent": "picker",
+      "getable": true,
+      "setable": true,
+      "values": [
+        {
+          "id": "off",
+          "title": {
+            "en": "Off"
+          }
+        },
+        {
+          "id": "on",
+          "title": {
+            "en": "Swing"
+          }
+        },
+        {
+          "id": "pos1",
+          "title": {
+            "en": "Position 1"
+          }
+        },
+        {
+          "id": "pos2",
+          "title": {
+            "en": "Position 2"
+          }
+        },
+        {
+          "id": "pos3",
+          "title": {
+            "en": "Position 3"
+          }
+        },
+        {
+          "id": "pos4",
+          "title": {
+            "en": "Position 4"
+          }
+        },
+        {
+          "id": "pos5",
+          "title": {
+            "en": "Position 5"
+          }
+        }
+      ]
+    },
+    "airco_vertical": {
+      "type": "enum",
+      "title": {
+        "en": "Vertical Swing"
+      },
+      "uiComponent": "picker",
+      "getable": true,
+      "setable": true,
+      "values": [
+        {
+          "id": "off",
+          "title": {
+            "en": "Off"
+          }
+        },
+        {
+          "id": "on",
+          "title": {
+            "en": "Swing"
+          }
+        },
+        {
+          "id": "pos1",
+          "title": {
+            "en": "Position 1"
+          }
+        },
+        {
+          "id": "pos2",
+          "title": {
+            "en": "Position 2"
+          }
+        },
+        {
+          "id": "pos3",
+          "title": {
+            "en": "Position 3"
+          }
+        },
+        {
+          "id": "pos4",
+          "title": {
+            "en": "Position 4"
+          }
+        },
+        {
+          "id": "pos5",
+          "title": {
+            "en": "Position 5"
+          }
+        }
+      ]
+    },
+    "auxiliary_heat": {
+      "type": "boolean",
+      "title": {
+        "en": "Aux Heat"
+      },
+      "icon": "/assets/icons/heat.svg",
+      "uiComponent": "toggle",
+      "getable": true,
+      "setable": true,
+      "desc": {
+        "en": "Electric backup heater"
+      }
+    },
+    "child_lock": {
+      "type": "boolean",
+      "title": {
+        "en": "Child Lock"
+      },
+      "icon": "/assets/icons/lock.svg",
+      "uiComponent": "toggle",
+      "getable": true,
+      "setable": true,
+      "desc": {
+        "en": "Lock physical controls"
+      }
+    },
+    "comfortable_wind": {
+      "type": "boolean",
+      "title": {
+        "en": "Comfort Wind"
+      },
+      "icon": "/assets/icons/wind.svg",
+      "uiComponent": "toggle",
+      "getable": true,
+      "setable": true,
+      "desc": {
+        "en": "Natural, gentle airflow"
+      }
+    },
+    "display_light": {
+      "type": "boolean",
+      "title": {
+        "en": "Display"
+      },
+      "icon": "/assets/icons/display.svg",
+      "uiComponent": "toggle",
+      "getable": true,
+      "setable": true,
+      "desc": {
+        "en": "LED display on/off"
+      }
+    },
+    "eco_mode": {
+      "type": "boolean",
+      "title": {
+        "en": "Eco Mode"
+      },
+      "icon": "/assets/icons/eco.svg",
+      "uiComponent": "toggle",
+      "getable": true,
+      "setable": true,
+      "desc": {
+        "en": "Energy-saving mode"
+      }
+    },
+    "error_status": {
+      "type": "string",
+      "title": {
+        "en": "Error Status"
+      },
+      "uiComponent": "sensor",
+      "getable": true,
+      "setable": false,
+      "desc": {
+        "en": "Device error flag (0 = no error)"
+      }
+    },
+    "fan_speed": {
+      "type": "enum",
+      "title": {
+        "en": "Fan Speed"
+      },
+      "uiComponent": "picker",
+      "getable": true,
+      "setable": true,
+      "values": [
+        {
+          "id": "auto",
+          "title": {
+            "en": "Auto"
+          }
+        },
+        {
+          "id": "mute",
+          "title": {
+            "en": "Mute"
+          }
+        },
+        {
+          "id": "low",
+          "title": {
+            "en": "Low"
+          }
+        },
+        {
+          "id": "mid_lower",
+          "title": {
+            "en": "Mid-Lower"
+          }
+        },
+        {
+          "id": "mid",
+          "title": {
+            "en": "Mid"
+          }
+        },
+        {
+          "id": "mid_higher",
+          "title": {
+            "en": "Mid-Higher"
+          }
+        },
+        {
+          "id": "high",
+          "title": {
+            "en": "High"
+          }
+        },
+        {
+          "id": "turbo",
+          "title": {
+            "en": "Turbo"
+          }
+        }
+      ]
+    },
+    "health_mode": {
+      "type": "boolean",
+      "title": {
+        "en": "Health Mode"
+      },
+      "icon": "/assets/icons/health.svg",
+      "uiComponent": "toggle",
+      "getable": true,
+      "setable": true,
+      "desc": {
+        "en": "Ionizer/air purification"
+      }
+    },
+    "mildew_proof": {
+      "type": "boolean",
+      "title": {
+        "en": "Mildew Proof"
+      },
+      "icon": "/assets/icons/mildew.svg",
+      "uiComponent": "toggle",
+      "getable": true,
+      "setable": true,
+      "desc": {
+        "en": "Dries unit after use to prevent mold"
+      }
+    },
+    "power_limit": {
+      "type": "number",
+      "title": {
+        "en": "Power Limit %"
+      },
+      "icon": "/assets/icons/power.svg",
+      "uiComponent": "slider",
+      "getable": true,
+      "setable": true,
+      "min": 0,
+      "max": 90,
+      "step": 10,
+      "units": {
+        "en": "%"
+      },
+      "desc": {
+        "en": "Maximum power consumption"
+      }
+    },
+    "power_limit_enabled": {
+      "type": "boolean",
+      "title": {
+        "en": "Power Limit"
+      },
+      "icon": "/assets/icons/power.svg",
+      "uiComponent": "toggle",
+      "getable": true,
+      "setable": true,
+      "desc": {
+        "en": "Limit maximum power usage"
+      }
+    },
+    "self_cleaning": {
+      "type": "boolean",
+      "title": {
+        "en": "Self Clean"
+      },
+      "icon": "/assets/icons/clean.svg",
+      "uiComponent": "toggle",
+      "getable": true,
+      "setable": true,
+      "desc": {
+        "en": "Auto-clean function"
+      }
+    },
+    "sleep_mode": {
+      "type": "boolean",
+      "title": {
+        "en": "Sleep Mode"
+      },
+      "icon": "/assets/icons/sleep.svg",
+      "uiComponent": "toggle",
+      "getable": true,
+      "setable": true,
+      "desc": {
+        "en": "Quiet operation for sleeping"
+      }
+    },
+    "temperature_unit": {
+      "type": "enum",
+      "title": {
+        "en": "Temperature Unit"
+      },
+      "uiComponent": "picker",
+      "getable": true,
+      "setable": true,
+      "values": [
+        {
+          "id": "celsius",
+          "title": {
+            "en": "Celsius"
+          }
+        },
+        {
+          "id": "fahrenheit",
+          "title": {
+            "en": "Fahrenheit"
+          }
+        }
+      ]
+    }
+  }
 }

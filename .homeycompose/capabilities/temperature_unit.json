@@ -1,0 +1,23 @@
+{
+  "type": "enum",
+  "title": {
+    "en": "Temperature Unit"
+  },
+  "uiComponent": "picker",
+  "getable": true,
+  "setable": true,
+  "values": [
+    {
+      "id": "celsius",
+      "title": {
+        "en": "Celsius"
+      }
+    },
+    {
+      "id": "fahrenheit",
+      "title": {
+        "en": "Fahrenheit"
+      }
+    }
+  ]
+}

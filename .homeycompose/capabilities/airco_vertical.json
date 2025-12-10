@@ -1,0 +1,53 @@
+{
+  "type": "enum",
+  "title": {
+    "en": "Vertical Swing"
+  },
+  "uiComponent": "picker",
+  "getable": true,
+  "setable": true,
+  "values": [
+    {
+      "id": "off",
+      "title": {
+        "en": "Off"
+      }
+    },
+    {
+      "id": "on",
+      "title": {
+        "en": "Swing"
+      }
+    },
+    {
+      "id": "pos1",
+      "title": {
+        "en": "Position 1"
+      }
+    },
+    {
+      "id": "pos2",
+      "title": {
+        "en": "Position 2"
+      }
+    },
+    {
+      "id": "pos3",
+      "title": {
+        "en": "Position 3"
+      }
+    },
+    {
+      "id": "pos4",
+      "title": {
+        "en": "Position 4"
+      }
+    },
+    {
+      "id": "pos5",
+      "title": {
+        "en": "Position 5"
+      }
+    }
+  ]
+}

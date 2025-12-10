@@ -1,0 +1,13 @@
+{
+  "type": "boolean",
+  "title": {
+    "en": "Mildew Proof"
+  },
+  "icon": "/assets/icons/mildew.svg",
+  "uiComponent": "toggle",
+  "getable": true,
+  "setable": true,
+  "desc": {
+    "en": "Dries unit after use to prevent mold"
+  }
+}

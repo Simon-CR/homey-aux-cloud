@@ -1,0 +1,13 @@
+{
+  "type": "boolean",
+  "title": {
+    "en": "Power Limit"
+  },
+  "icon": "/assets/icons/power.svg",
+  "uiComponent": "toggle",
+  "getable": true,
+  "setable": true,
+  "desc": {
+    "en": "Limit maximum power usage"
+  }
+}

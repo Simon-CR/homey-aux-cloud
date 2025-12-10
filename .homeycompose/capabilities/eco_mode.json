@@ -1,0 +1,13 @@
+{
+  "type": "boolean",
+  "title": {
+    "en": "Eco Mode"
+  },
+  "icon": "/assets/icons/eco.svg",
+  "uiComponent": "toggle",
+  "getable": true,
+  "setable": true,
+  "desc": {
+    "en": "Energy-saving mode"
+  }
+}

@@ -1,10 +1,129 @@
 {
   "pair": {
     "login": {
+      "title": "Login to AUX Cloud",
       "error": "Failed to login. Please check your credentials and try again."
     },
     "list_devices": {
-      "error": "Failed to retrieve devices. Please try again."
+      "title": "Select your device",
+      "subtitle": "Choose the AC unit to add",
+      "error": "Failed to retrieve devices. Please try again.",
+      "empty": "No devices found. Please add a device in the AUX Freedom app first."
+    }
+  },
+  "settings": {
+    "region": "Cloud Region",
+    "regionHint": "Select the region matching your AUX Freedom app"
+  },
+  "capability": {
+    "fan_speed": {
+      "title": "Fan Speed",
+      "values": {
+        "auto": "Auto",
+        "mute": "Silent",
+        "low": "Low",
+        "mid_lower": "Medium-Low",
+        "mid": "Medium",
+        "mid_higher": "Medium-High",
+        "high": "High",
+        "turbo": "Turbo"
+      }
+    },
+    "airco_vertical": {
+      "title": "Vertical Airflow",
+      "values": {
+        "off": "Fixed",
+        "on": "Swing",
+        "pos1": "Up",
+        "pos2": "Upper",
+        "pos3": "Middle",
+        "pos4": "Lower",
+        "pos5": "Down"
+      }
+    },
+    "airco_horizontal": {
+      "title": "Horizontal Airflow",
+      "values": {
+        "off": "Fixed",
+        "on": "Swing",
+        "pos1": "Left",
+        "pos2": "Left-Center",
+        "pos3": "Center",
+        "pos4": "Right-Center",
+        "pos5": "Right"
+      }
+    },
+    "eco_mode": {
+      "title": "Eco Mode",
+      "description": "Energy-saving mode for reduced power consumption"
+    },
+    "health_mode": {
+      "title": "Health Mode",
+      "description": "Activates ionizer for air purification"
+    },
+    "sleep_mode": {
+      "title": "Sleep Mode",
+      "description": "Quiet operation with gradual temperature adjustment"
+    },
+    "display_light": {
+      "title": "Display",
+      "description": "Turn the LED display on or off"
+    },
+    "self_cleaning": {
+      "title": "Self Clean",
+      "description": "Automatic cleaning cycle to prevent mold"
+    },
+    "child_lock": {
+      "title": "Child Lock",
+      "description": "Locks physical controls on the unit"
+    },
+    "mildew_proof": {
+      "title": "Mildew Proof",
+      "description": "Dries internal components after cooling"
+    },
+    "comfortable_wind": {
+      "title": "Comfort Wind",
+      "description": "Natural, gentle airflow pattern"
+    },
+    "auxiliary_heat": {
+      "title": "Auxiliary Heat",
+      "description": "Electric backup heating element"
+    },
+    "power_limit": {
+      "title": "Power Limit",
+      "description": "Maximum power consumption percentage"
+    },
+    "power_limit_enabled": {
+      "title": "Power Limit Enabled",
+      "description": "Enable power consumption limiting"
+    },
+    "temperature_unit": {
+      "title": "Temperature Unit",
+      "values": {
+        "celsius": "°C (Celsius)",
+        "fahrenheit": "°F (Fahrenheit)"
+      }
+    },
+    "error_status": {
+      "title": "Status",
+      "description": "Current device status and error codes"
+    }
+  },
+  "flow": {
+    "triggers": {
+      "temperature_changed": "Temperature changed",
+      "mode_changed": "Mode changed",
+      "error_detected": "Error detected"
+    },
+    "conditions": {
+      "is_on": "Is turned on",
+      "mode_is": "Mode is..."
+    },
+    "actions": {
+      "set_fan_speed": "Set fan speed",
+      "set_swing": "Set airflow direction",
+      "enable_eco": "Enable eco mode",
+      "disable_eco": "Disable eco mode"
     }
   }
 }

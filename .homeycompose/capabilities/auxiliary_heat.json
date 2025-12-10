@@ -1,0 +1,13 @@
+{
+  "type": "boolean",
+  "title": {
+    "en": "Aux Heat"
+  },
+  "icon": "/assets/icons/heat.svg",
+  "uiComponent": "toggle",
+  "getable": true,
+  "setable": true,
+  "desc": {
+    "en": "Electric backup heater"
+  }
+}

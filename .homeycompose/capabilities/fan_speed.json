@@ -1,0 +1,59 @@
+{
+  "type": "enum",
+  "title": {
+    "en": "Fan Speed"
+  },
+  "uiComponent": "picker",
+  "getable": true,
+  "setable": true,
+  "values": [
+    {
+      "id": "auto",
+      "title": {
+        "en": "Auto"
+      }
+    },
+    {
+      "id": "mute",
+      "title": {
+        "en": "Mute"
+      }
+    },
+    {
+      "id": "low",
+      "title": {
+        "en": "Low"
+      }
+    },
+    {
+      "id": "mid_lower",
+      "title": {
+        "en": "Mid-Lower"
+      }
+    },
+    {
+      "id": "mid",
+      "title": {
+        "en": "Mid"
+      }
+    },
+    {
+      "id": "mid_higher",
+      "title": {
+        "en": "Mid-Higher"
+      }
+    },
+    {
+      "id": "high",
+      "title": {
+        "en": "High"
+      }
+    },
+    {
+      "id": "turbo",
+      "title": {
+        "en": "Turbo"
+      }
+    }
+  ]
+}

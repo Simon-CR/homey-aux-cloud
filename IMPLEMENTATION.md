@@ -32,8 +32,10 @@ This repository now contains a complete, production-ready Homey app for controll
   - Device selection and pairing
 
 ### Capabilities Implemented
+
+#### Basic Controls
 ✅ **onoff** - Turn AC on/off
-✅ **target_temperature** - Set target temperature (16-30°C)
+✅ **target_temperature** - Set target temperature (16-32°C, 0.5° steps)
 ✅ **measure_temperature** - Read current room temperature
 ✅ **thermostat_mode** - Select operating mode:
   - auto - Automatic mode
@@ -41,6 +43,36 @@ This repository now contains a complete, production-ready Homey app for controll
   - heat - Heating mode
   - dry - Dehumidification mode
   - fan_only - Fan only mode
+
+#### Fan Control
+✅ **fan_speed** - Set fan speed:
+  - auto - Automatic
+  - low - Low speed
+  - medium - Medium speed
+  - high - High speed
+  - turbo - Turbo/powerful mode
+  - mute - Quiet/silent mode
+
+#### Airflow Control
+✅ **airco_vertical** - Vertical swing/louver position:
+  - off - Stopped
+  - on - Swing mode
+  - pos1-pos5 - Fixed positions
+✅ **airco_horizontal** - Horizontal swing/louver position:
+  - off - Stopped
+  - on - Swing mode
+  - pos1-pos5 - Fixed positions
+
+#### Feature Toggles
+✅ **eco_mode** - Energy saving mode
+✅ **health_mode** - Ionizer/air purification
+✅ **sleep_mode** - Sleep mode for quiet operation
+✅ **display_light** - LED display on/off
+✅ **self_cleaning** - Auto-clean function
+✅ **child_lock** - Lock physical controls
+✅ **mildew_proof** - Anti-mold function
+✅ **comfortable_wind** - Natural/comfortable airflow
+✅ **auxiliary_heat** - Electric auxiliary heater
 
 ### Documentation
 ✅ **README.md** - Comprehensive user documentation including:

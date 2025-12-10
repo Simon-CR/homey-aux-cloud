@@ -7,3 +7,11 @@ node_modules/
 .env
 .homeycompose/
 README.md
+DEVELOPMENT.md
+IMAGE_REQUIREMENTS.md
+IMPLEMENTATION.md
+REFERENCES.md
+memory-bank/
+test-*.js
+debug-*.js
+*.test.js

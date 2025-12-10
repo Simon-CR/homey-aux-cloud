@@ -1,0 +1,13 @@
+{
+  "type": "boolean",
+  "title": {
+    "en": "Comfort Wind"
+  },
+  "icon": "/assets/icons/wind.svg",
+  "uiComponent": "toggle",
+  "getable": true,
+  "setable": true,
+  "desc": {
+    "en": "Natural, gentle airflow"
+  }
+}

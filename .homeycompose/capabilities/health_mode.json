@@ -1,0 +1,13 @@
+{
+  "type": "boolean",
+  "title": {
+    "en": "Health Mode"
+  },
+  "icon": "/assets/icons/health.svg",
+  "uiComponent": "toggle",
+  "getable": true,
+  "setable": true,
+  "desc": {
+    "en": "Ionizer/air purification"
+  }
+}

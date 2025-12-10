@@ -1,7 +1,7 @@
 'use strict';
 
 const Homey = require('homey');
-const { AuxCloudAPI } = require('../../lib/AuxCloudAPI');
+const { AuxCloudAPI, isSupportedDevice, getDeviceTypeName, logUnknownDevice } = require('../../lib/AuxCloudAPI');
 
 class AuxACDriver extends Homey.Driver {
 
@@ -21,6 +21,7 @@ class AuxACDriver extends Homey.Driver {
     let region = 'eu'; // Default to EU region
     let api = null;
     let devices = [];
+    let skippedDevices = []; // Track unsupported devices for user feedback
 
     // Handle login credentials
     session.setHandler('login', async (data) => {
@@ -50,19 +51,25 @@ class AuxACDriver extends Homey.Driver {
         const families = await api.getFamilies();
         
         devices = [];
+        skippedDevices = [];
         
         // Get devices from all families
         for (const family of families) {
           const familyDevices = await api.getDevices(family.familyid);
           
-          // Filter for AC devices and format for Homey
+          this.log(`Found ${familyDevices.length} devices in family ${family.familyid}`);
+          
+          // Filter for supported HVAC devices (AC and Heat Pumps)
           for (const device of familyDevices) {
-            // Check if it's an AC device
-            const isAC = this._isACDevice(device.productId);
+            this.log(`Checking device: ${device.name || device.friendlyName} (productId: ${device.productId})`);
             
-            if (isAC) {
+            // Check if it's a supported HVAC device
+            if (isSupportedDevice(device.productId)) {
+              const deviceType = getDeviceTypeName(device.productId);
+              this.log(`✓ Adding supported device: ${device.name || device.friendlyName} (${deviceType})`);
+              
               devices.push({
-                name: device.name || `AUX AC ${device.endpointId.slice(-6)}`,
+                name: device.name || device.friendlyName || `AUX ${deviceType} ${device.endpointId.slice(-6)}`,
                 data: {
                   id: device.endpointId,
                   familyid: family.familyid
@@ -78,8 +85,23 @@ class AuxACDriver extends Homey.Driver {
                   devSession: device.devSession
                 }
               });
+            } else {
+              // Log unknown device for future support
+              const unknownInfo = logUnknownDevice(device);
+              skippedDevices.push(unknownInfo);
+              this.log(`✗ Skipping unsupported device: ${unknownInfo.name}`);
+              this.log(`  Product ID: ${unknownInfo.productId}`);
+              this.log(`  MAC: ${unknownInfo.mac}`);
+              this.log(`  ${unknownInfo.message}`);
             }
           }
+        }
+        
+        // Log summary
+        this.log(`Device discovery complete: ${devices.length} supported, ${skippedDevices.length} unsupported`);
+        if (skippedDevices.length > 0) {
+          this.log('Unsupported devices found. Please report these product IDs to add support:');
+          skippedDevices.forEach(d => this.log(`  - ${d.name}: ${d.productId}`));
         }
 
         return devices;
@@ -88,17 +110,6 @@ class AuxACDriver extends Homey.Driver {
         throw new Error(this.homey.__('pair.list_devices.error'));
       }
     });
-  }
-
-  /**
-   * Check if device is an AC unit
-   */
-  _isACDevice(productId) {
-    const AC_PRODUCT_IDS = [
-      '000000000000000000000000c0620000',
-      '0000000000000000000000002a4e0000'
-    ];
-    return AC_PRODUCT_IDS.includes(productId);
   }
 
 }

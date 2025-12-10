@@ -1,0 +1,13 @@
+{
+  "type": "boolean",
+  "title": {
+    "en": "Sleep Mode"
+  },
+  "icon": "/assets/icons/sleep.svg",
+  "uiComponent": "toggle",
+  "getable": true,
+  "setable": true,
+  "desc": {
+    "en": "Quiet operation for sleeping"
+  }
+}

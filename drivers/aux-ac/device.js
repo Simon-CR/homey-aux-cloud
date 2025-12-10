@@ -1,7 +1,12 @@
 'use strict';
 
 const Homey = require('homey');
-const { AuxCloudAPI, AC_MODE } = require('../../lib/AuxCloudAPI');
+const { AuxCloudAPI, AC_MODE, FAN_SPEED, AC_PARAMS } = require('../../lib/AuxCloudAPI');
+
+// Delay before syncing state after a command (in ms)
+// Set to 5 seconds to allow device to process command before polling
+// This prevents the "value reverting" issue (maeek/ha-aux-cloud #53)
+const SYNC_DELAY_MS = 5000;
 
 // Map Homey thermostat modes to AUX AC modes
 const HOMEY_MODE_TO_AUX = {
@@ -20,6 +25,78 @@ const AUX_MODE_TO_HOMEY = {
   [AC_MODE.FAN]: 'fan_only'
 };
 
+// Map Homey fan speed to AUX fan speed
+const HOMEY_FAN_TO_AUX = {
+  'auto': FAN_SPEED.AUTO,
+  'low': FAN_SPEED.LOW,
+  'mid': FAN_SPEED.MID,
+  'high': FAN_SPEED.HIGH,
+  'turbo': FAN_SPEED.TURBO,
+  'mute': FAN_SPEED.MUTE,
+  'mid_lower': FAN_SPEED.MID_LOWER,
+  'mid_higher': FAN_SPEED.MID_HIGHER
+};
+
+const AUX_FAN_TO_HOMEY = {
+  [FAN_SPEED.AUTO]: 'auto',
+  [FAN_SPEED.LOW]: 'low',
+  [FAN_SPEED.MID]: 'mid',
+  [FAN_SPEED.HIGH]: 'high',
+  [FAN_SPEED.TURBO]: 'turbo',
+  [FAN_SPEED.MUTE]: 'mute',
+  [FAN_SPEED.MID_LOWER]: 'mid_lower',
+  [FAN_SPEED.MID_HIGHER]: 'mid_higher'
+};
+
+// Map Homey swing values to AUX values (0=off, 1=swing, 2-6=positions)
+const HOMEY_SWING_TO_AUX = {
+  'off': 0,
+  'on': 1,
+  'pos1': 2,
+  'pos2': 3,
+  'pos3': 4,
+  'pos4': 5,
+  'pos5': 6
+};
+
+const AUX_SWING_TO_HOMEY = {
+  0: 'off',
+  1: 'on',
+  2: 'pos1',
+  3: 'pos2',
+  4: 'pos3',
+  5: 'pos4',
+  6: 'pos5'
+};
+
+// Map API parameters to Homey capabilities for dynamic detection
+const PARAM_TO_CAPABILITY = {
+  'ac_vdir': 'airco_vertical',
+  'ac_hdir': 'airco_horizontal',
+  'ecomode': 'eco_mode',
+  'ac_health': 'health_mode',
+  'ac_slp': 'sleep_mode',
+  'scrdisp': 'display_light',
+  'ac_clean': 'self_cleaning',
+  'childlock': 'child_lock',
+  'mldprf': 'mildew_proof',
+  'comfwind': 'comfortable_wind',
+  'ac_astheat': 'auxiliary_heat',
+  'pwrlimit': 'power_limit',
+  'pwrlimitswitch': 'power_limit_enabled',
+  'tempunit': 'temperature_unit',
+  'err_flag': 'error_status'
+};
+
+// Core capabilities that all AC devices should have
+const CORE_CAPABILITIES = [
+  'onoff',
+  'target_temperature',
+  'measure_temperature',
+  'thermostat_mode',
+  'fan_speed'
+];
+
 class AuxACDevice extends Homey.Device {
 
   /**
@@ -34,6 +111,9 @@ class AuxACDevice extends Homey.Device {
     
     this.deviceId = data.id;
     this.familyid = data.familyid;
+    
+    // Track which optional capabilities this device supports
+    this.supportedParams = new Set();
     
     // Initialize API
     this.api = new AuxCloudAPI(store.region || 'eu');
@@ -56,10 +136,28 @@ class AuxACDevice extends Homey.Device {
       devSession: store.devSession
     };
 
-    // Register capability listeners
+    // Register core capability listeners (always present)
     this.registerCapabilityListener('onoff', this.onCapabilityOnoff.bind(this));
     this.registerCapabilityListener('target_temperature', this.onCapabilityTargetTemperature.bind(this));
     this.registerCapabilityListener('thermostat_mode', this.onCapabilityThermostatMode.bind(this));
+    
+    // Register optional capability listeners only if they exist
+    this._registerOptionalCapabilityListener('fan_speed', this.onCapabilityFanSpeed.bind(this));
+    this._registerOptionalCapabilityListener('airco_vertical', this.onCapabilitySwingVertical.bind(this));
+    this._registerOptionalCapabilityListener('airco_horizontal', this.onCapabilitySwingHorizontal.bind(this));
+    this._registerOptionalCapabilityListener('eco_mode', this.onCapabilityEcoMode.bind(this));
+    this._registerOptionalCapabilityListener('health_mode', this.onCapabilityHealthMode.bind(this));
+    this._registerOptionalCapabilityListener('sleep_mode', this.onCapabilitySleepMode.bind(this));
+    this._registerOptionalCapabilityListener('display_light', this.onCapabilityDisplayLight.bind(this));
+    this._registerOptionalCapabilityListener('self_cleaning', this.onCapabilitySelfCleaning.bind(this));
+    this._registerOptionalCapabilityListener('child_lock', this.onCapabilityChildLock.bind(this));
+    this._registerOptionalCapabilityListener('mildew_proof', this.onCapabilityMildewProof.bind(this));
+    this._registerOptionalCapabilityListener('comfortable_wind', this.onCapabilityComfortableWind.bind(this));
+    this._registerOptionalCapabilityListener('auxiliary_heat', this.onCapabilityAuxiliaryHeat.bind(this));
+    this._registerOptionalCapabilityListener('power_limit', this.onCapabilityPowerLimit.bind(this));
+    this._registerOptionalCapabilityListener('power_limit_enabled', this.onCapabilityPowerLimitEnabled.bind(this));
+    this._registerOptionalCapabilityListener('temperature_unit', this.onCapabilityTemperatureUnit.bind(this));
+    // Note: error_status is read-only, no listener needed
 
     // Set available thermostat modes
     await this.setCapabilityOptions('thermostat_mode', {
@@ -67,12 +165,22 @@ class AuxACDevice extends Homey.Device {
     }).catch(this.error);
 
     // Start polling for state updates
-    this.pollInterval = setInterval(() => {
+    // Use this.homey.setInterval for automatic cleanup on Homey Cloud
+    this.pollInterval = this.homey.setInterval(() => {
       this.syncDeviceState().catch(this.error);
     }, 30000); // Poll every 30 seconds
 
-    // Initial state sync
+    // Initial state sync - this will also detect which capabilities the device supports
     await this.syncDeviceState();
+  }
+
+  /**
+   * Register a capability listener only if the capability exists on the device
+   */
+  _registerOptionalCapabilityListener(capability, handler) {
+    if (this.hasCapability(capability)) {
+      this.registerCapabilityListener(capability, handler);
+    }
   }
 
   /**
@@ -104,16 +212,36 @@ class AuxACDevice extends Homey.Device {
     
     // Clear polling interval
     if (this.pollInterval) {
-      clearInterval(this.pollInterval);
+      this.homey.clearInterval(this.pollInterval);
+    }
+  }
+
+  /**
+   * onUninit is called when the device is destroyed (app restart, Homey Cloud cleanup, etc.)
+   * Required for proper cleanup on Homey Cloud multi-tenancy
+   */
+  async onUninit() {
+    this.log('AUX AC device is being uninitialized');
+    
+    // Clear polling interval
+    if (this.pollInterval) {
+      this.homey.clearInterval(this.pollInterval);
+    }
+    
+    // Clean up API instance
+    if (this.api) {
+      this.api = null;
     }
   }
 
   /**
    * Sync device state from cloud
+   * Includes automatic retry and re-authentication on transient failures
    */
   async syncDeviceState() {
     try {
       // Get fresh device list to update sessions
+      // The API now handles auto-relogin internally via _withRetry
       const families = await this.api.getFamilies();
       let foundDevice = null;
       
@@ -130,8 +258,12 @@ class AuxACDevice extends Homey.Device {
         return;
       }
 
-      // Update device info with fresh session
+      // Update device info with fresh session and cookie
+      // This is critical for preventing stale session errors (maeek/ha-aux-cloud #41)
       this.deviceInfo.devSession = foundDevice.devSession;
+      if (foundDevice.cookie) {
+        this.deviceInfo.cookie = foundDevice.cookie;
+      }
       
       // Check if device is online
       if (foundDevice.state !== 1) {
@@ -143,7 +275,10 @@ class AuxACDevice extends Homey.Device {
 
       const params = foundDevice.params || {};
 
-      // Update capabilities
+      // Detect which optional capabilities this device supports based on reported params
+      await this._updateDynamicCapabilities(params);
+
+      // Update basic capabilities
       if (params.pwr !== undefined) {
         const isOn = params.pwr === 1;
         await this.setCapabilityValue('onoff', isOn).catch(this.error);
@@ -168,9 +303,157 @@ class AuxACDevice extends Homey.Device {
         }
       }
 
+      // Update fan speed
+      if (params.ac_mark !== undefined) {
+        const homeyFan = AUX_FAN_TO_HOMEY[params.ac_mark];
+        if (homeyFan && this.hasCapability('fan_speed')) {
+          await this.setCapabilityValue('fan_speed', homeyFan).catch(this.error);
+        }
+      }
+
+      // Update swing modes - only if device supports them
+      if (params.ac_vdir !== undefined && this.hasCapability('airco_vertical')) {
+        const homeySwing = AUX_SWING_TO_HOMEY[params.ac_vdir] || 'off';
+        await this.setCapabilityValue('airco_vertical', homeySwing).catch(this.error);
+      }
+
+      if (params.ac_hdir !== undefined && this.hasCapability('airco_horizontal')) {
+        const homeySwing = AUX_SWING_TO_HOMEY[params.ac_hdir] || 'off';
+        await this.setCapabilityValue('airco_horizontal', homeySwing).catch(this.error);
+      }
+
+      // Update toggle capabilities - only if device supports them
+      if (params.ecomode !== undefined && this.hasCapability('eco_mode')) {
+        await this.setCapabilityValue('eco_mode', params.ecomode === 1).catch(this.error);
+      }
+
+      if (params.ac_health !== undefined && this.hasCapability('health_mode')) {
+        await this.setCapabilityValue('health_mode', params.ac_health === 1).catch(this.error);
+      }
+
+      if (params.ac_slp !== undefined && this.hasCapability('sleep_mode')) {
+        await this.setCapabilityValue('sleep_mode', params.ac_slp === 1).catch(this.error);
+      }
+
+      if (params.scrdisp !== undefined && this.hasCapability('display_light')) {
+        await this.setCapabilityValue('display_light', params.scrdisp === 1).catch(this.error);
+      }
+
+      if (params.ac_clean !== undefined && this.hasCapability('self_cleaning')) {
+        await this.setCapabilityValue('self_cleaning', params.ac_clean === 1).catch(this.error);
+      }
+
+      if (params.childlock !== undefined && this.hasCapability('child_lock')) {
+        await this.setCapabilityValue('child_lock', params.childlock === 1).catch(this.error);
+      }
+
+      if (params.mldprf !== undefined && this.hasCapability('mildew_proof')) {
+        await this.setCapabilityValue('mildew_proof', params.mldprf === 1).catch(this.error);
+      }
+
+      if (params.comfwind !== undefined && this.hasCapability('comfortable_wind')) {
+        await this.setCapabilityValue('comfortable_wind', params.comfwind === 1).catch(this.error);
+      }
+
+      if (params.ac_astheat !== undefined && this.hasCapability('auxiliary_heat')) {
+        await this.setCapabilityValue('auxiliary_heat', params.ac_astheat === 1).catch(this.error);
+      }
+
+      // Update power limit capabilities
+      if (params.pwrlimit !== undefined && this.hasCapability('power_limit')) {
+        await this.setCapabilityValue('power_limit', params.pwrlimit).catch(this.error);
+      }
+
+      if (params.pwrlimitswitch !== undefined && this.hasCapability('power_limit_enabled')) {
+        await this.setCapabilityValue('power_limit_enabled', params.pwrlimitswitch === 1).catch(this.error);
+      }
+
+      // Update temperature unit
+      if (params.tempunit !== undefined && this.hasCapability('temperature_unit')) {
+        const unit = params.tempunit === 1 ? 'celsius' : 'fahrenheit';
+        await this.setCapabilityValue('temperature_unit', unit).catch(this.error);
+      }
+
+      // Update error status (read-only diagnostic)
+      if (params.err_flag !== undefined && this.hasCapability('error_status')) {
+        const errorMsg = params.err_flag === 0 ? 'No error' : `Error: ${params.err_flag}`;
+        await this.setCapabilityValue('error_status', errorMsg).catch(this.error);
+      }
+
+      // Reset consecutive sync failures on success
+      this._syncFailures = 0;
+
     } catch (error) {
       this.error('Failed to sync device state:', error);
-      this.setUnavailable('Failed to sync state').catch(this.error);
+      
+      // Track consecutive failures for smarter error handling
+      this._syncFailures = (this._syncFailures || 0) + 1;
+      
+      // Only mark unavailable after multiple consecutive failures
+      // This prevents transient network issues from causing device flicker
+      if (this._syncFailures >= 3) {
+        this.setUnavailable('Failed to sync state - check connection').catch(this.error);
+      }
+    }
+  }
+
+  /**
+   * Update device capabilities dynamically based on what params the device reports
+   * This allows different AC models to show only the features they support
+   */
+  async _updateDynamicCapabilities(params) {
+    const reportedParams = Object.keys(params);
+    
+    // Check each param -> capability mapping
+    for (const [param, capability] of Object.entries(PARAM_TO_CAPABILITY)) {
+      const deviceSupportsParam = reportedParams.includes(param);
+      const hasCapability = this.hasCapability(capability);
+      
+      if (deviceSupportsParam && !hasCapability) {
+        // Device supports this param but we don't have the capability - add it
+        this.log(`Adding capability ${capability} (device reports ${param})`);
+        try {
+          await this.addCapability(capability);
+          // Register listener for the new capability if it's not read-only
+          this._registerDynamicCapabilityListener(capability);
+        } catch (error) {
+          this.error(`Failed to add capability ${capability}:`, error);
+        }
+      } else if (!deviceSupportsParam && hasCapability) {
+        // Device doesn't support this param but we have the capability - keep it for now
+        // Note: We don't remove capabilities because the device might just not be 
+        // reporting them in this response. User can manually reset if needed.
+        this.log(`Device does not report ${param}, but capability ${capability} exists`);
+      }
+    }
+  }
+
+  /**
+   * Register a listener for a dynamically added capability
+   */
+  _registerDynamicCapabilityListener(capability) {
+    const listenerMap = {
+      'airco_vertical': this.onCapabilitySwingVertical,
+      'airco_horizontal': this.onCapabilitySwingHorizontal,
+      'eco_mode': this.onCapabilityEcoMode,
+      'health_mode': this.onCapabilityHealthMode,
+      'fan_speed': this.onCapabilityFanSpeed,
+      'sleep_mode': this.onCapabilitySleepMode,
+      'display_light': this.onCapabilityDisplayLight,
+      'self_cleaning': this.onCapabilitySelfCleaning,
+      'child_lock': this.onCapabilityChildLock,
+      'mildew_proof': this.onCapabilityMildewProof,
+      'comfortable_wind': this.onCapabilityComfortableWind,
+      'auxiliary_heat': this.onCapabilityAuxiliaryHeat,
+      'power_limit': this.onCapabilityPowerLimit,
+      'power_limit_enabled': this.onCapabilityPowerLimitEnabled,
+      'temperature_unit': this.onCapabilityTemperatureUnit
+      // error_status is read-only, no listener needed
+    };
+
+    const handler = listenerMap[capability];
+    if (handler) {
+      this.registerCapabilityListener(capability, handler.bind(this));
     }
   }
 
@@ -191,10 +474,10 @@ class AuxACDevice extends Homey.Device {
         throw new Error('Failed to set power state');
       }
 
-      // Wait a bit then sync state
-      setTimeout(() => {
+      // Wait before syncing to allow device to process command
+      this.homey.setTimeout(() => {
         this.syncDeviceState().catch(this.error);
-      }, 2000);
+      }, SYNC_DELAY_MS);
 
       return value;
     } catch (error) {
@@ -221,10 +504,10 @@ class AuxACDevice extends Homey.Device {
         throw new Error('Failed to set temperature');
       }
 
-      // Wait a bit then sync state
-      setTimeout(() => {
+      // Wait before syncing to allow device to process command
+      this.homey.setTimeout(() => {
         this.syncDeviceState().catch(this.error);
-      }, 2000);
+      }, SYNC_DELAY_MS);
 
       return value;
     } catch (error) {
@@ -256,14 +539,271 @@ class AuxACDevice extends Homey.Device {
         throw new Error('Failed to set mode');
       }
 
-      // Wait a bit then sync state
-      setTimeout(() => {
+      // Wait before syncing to allow device to process command
+      this.homey.setTimeout(() => {
         this.syncDeviceState().catch(this.error);
-      }, 2000);
+      }, SYNC_DELAY_MS);
 
       return value;
     } catch (error) {
       this.error('Failed to set thermostat_mode:', error);
+      throw new Error('Failed to control device');
+    }
+  }
+
+  /**
+   * Handle fan_speed capability
+   */
+  async onCapabilityFanSpeed(value) {
+    this.log('fan_speed changed to:', value);
+
+    try {
+      const auxFan = HOMEY_FAN_TO_AUX[value];
+      
+      if (auxFan === undefined) {
+        throw new Error('Invalid fan speed');
+      }
+
+      const params = {
+        ac_mark: auxFan
+      };
+
+      const success = await this.api.setDeviceParams(this.deviceInfo, params);
+      
+      if (!success) {
+        throw new Error('Failed to set fan speed');
+      }
+
+      this.homey.setTimeout(() => {
+        this.syncDeviceState().catch(this.error);
+      }, SYNC_DELAY_MS);
+
+      return value;
+    } catch (error) {
+      this.error('Failed to set fan_speed:', error);
+      throw new Error('Failed to control device');
+    }
+  }
+
+  /**
+   * Handle vertical swing capability
+   */
+  async onCapabilitySwingVertical(value) {
+    this.log('airco_vertical changed to:', value);
+
+    try {
+      const auxSwing = HOMEY_SWING_TO_AUX[value];
+      
+      if (auxSwing === undefined) {
+        throw new Error('Invalid swing position');
+      }
+
+      const params = {
+        ac_vdir: auxSwing
+      };
+
+      const success = await this.api.setDeviceParams(this.deviceInfo, params);
+      
+      if (!success) {
+        throw new Error('Failed to set swing position');
+      }
+
+      this.homey.setTimeout(() => {
+        this.syncDeviceState().catch(this.error);
+      }, SYNC_DELAY_MS);
+
+      return value;
+    } catch (error) {
+      this.error('Failed to set airco_vertical:', error);
+      throw new Error('Failed to control device');
+    }
+  }
+
+  /**
+   * Handle horizontal swing capability
+   */
+  async onCapabilitySwingHorizontal(value) {
+    this.log('airco_horizontal changed to:', value);
+
+    try {
+      const auxSwing = HOMEY_SWING_TO_AUX[value];
+      
+      if (auxSwing === undefined) {
+        throw new Error('Invalid swing position');
+      }
+
+      const params = {
+        ac_hdir: auxSwing
+      };
+
+      const success = await this.api.setDeviceParams(this.deviceInfo, params);
+      
+      if (!success) {
+        throw new Error('Failed to set swing position');
+      }
+
+      this.homey.setTimeout(() => {
+        this.syncDeviceState().catch(this.error);
+      }, SYNC_DELAY_MS);
+
+      return value;
+    } catch (error) {
+      this.error('Failed to set airco_horizontal:', error);
+      throw new Error('Failed to control device');
+    }
+  }
+
+  /**
+   * Handle eco_mode capability
+   */
+  async onCapabilityEcoMode(value) {
+    return this._setBooleanParam('eco_mode', 'ecomode', value);
+  }
+
+  /**
+   * Handle health_mode capability
+   */
+  async onCapabilityHealthMode(value) {
+    return this._setBooleanParam('health_mode', 'ac_health', value);
+  }
+
+  /**
+   * Handle sleep_mode capability
+   */
+  async onCapabilitySleepMode(value) {
+    return this._setBooleanParam('sleep_mode', 'ac_slp', value);
+  }
+
+  /**
+   * Handle display_light capability
+   */
+  async onCapabilityDisplayLight(value) {
+    return this._setBooleanParam('display_light', 'scrdisp', value);
+  }
+
+  /**
+   * Handle self_cleaning capability
+   */
+  async onCapabilitySelfCleaning(value) {
+    return this._setBooleanParam('self_cleaning', 'ac_clean', value);
+  }
+
+  /**
+   * Handle child_lock capability
+   */
+  async onCapabilityChildLock(value) {
+    return this._setBooleanParam('child_lock', 'childlock', value);
+  }
+
+  /**
+   * Handle mildew_proof capability
+   */
+  async onCapabilityMildewProof(value) {
+    return this._setBooleanParam('mildew_proof', 'mldprf', value);
+  }
+
+  /**
+   * Handle comfortable_wind capability
+   */
+  async onCapabilityComfortableWind(value) {
+    return this._setBooleanParam('comfortable_wind', 'comfwind', value);
+  }
+
+  /**
+   * Handle auxiliary_heat capability
+   */
+  async onCapabilityAuxiliaryHeat(value) {
+    return this._setBooleanParam('auxiliary_heat', 'ac_astheat', value);
+  }
+
+  /**
+   * Handle power_limit capability
+   */
+  async onCapabilityPowerLimit(value) {
+    this.log('power_limit changed to:', value);
+
+    try {
+      const params = {
+        pwrlimit: Math.round(value)
+      };
+
+      const success = await this.api.setDeviceParams(this.deviceInfo, params);
+      
+      if (!success) {
+        throw new Error('Failed to set power limit');
+      }
+
+      this.homey.setTimeout(() => {
+        this.syncDeviceState().catch(this.error);
+      }, SYNC_DELAY_MS);
+
+      return value;
+    } catch (error) {
+      this.error('Failed to set power_limit:', error);
+      throw new Error('Failed to control device');
+    }
+  }
+
+  /**
+   * Handle power_limit_enabled capability
+   */
+  async onCapabilityPowerLimitEnabled(value) {
+    return this._setBooleanParam('power_limit_enabled', 'pwrlimitswitch', value);
+  }
+
+  /**
+   * Handle temperature_unit capability
+   */
+  async onCapabilityTemperatureUnit(value) {
+    this.log('temperature_unit changed to:', value);
+
+    try {
+      // 1 = Celsius, 0 = Fahrenheit
+      const params = {
+        tempunit: value === 'celsius' ? 1 : 0
+      };
+
+      const success = await this.api.setDeviceParams(this.deviceInfo, params);
+      
+      if (!success) {
+        throw new Error('Failed to set temperature unit');
+      }
+
+      this.homey.setTimeout(() => {
+        this.syncDeviceState().catch(this.error);
+      }, SYNC_DELAY_MS);
+
+      return value;
+    } catch (error) {
+      this.error('Failed to set temperature_unit:', error);
+      throw new Error('Failed to control device');
+    }
+  }
+
+  /**
+   * Helper to set boolean parameters
+   */
+  async _setBooleanParam(capabilityName, paramName, value) {
+    this.log(`${capabilityName} changed to:`, value);
+
+    try {
+      const params = {
+        [paramName]: value ? 1 : 0
+      };
+
+      const success = await this.api.setDeviceParams(this.deviceInfo, params);
+      
+      if (!success) {
+        throw new Error(`Failed to set ${capabilityName}`);
+      }
+
+      this.homey.setTimeout(() => {
+        this.syncDeviceState().catch(this.error);
+      }, SYNC_DELAY_MS);
+
+      return value;
+    } catch (error) {
+      this.error(`Failed to set ${capabilityName}:`, error);
       throw new Error('Failed to control device');
     }
   }

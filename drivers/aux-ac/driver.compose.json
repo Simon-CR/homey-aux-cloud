@@ -8,13 +8,29 @@
     "onoff",
     "target_temperature",
     "measure_temperature",
-    "thermostat_mode"
+    "thermostat_mode",
+    "fan_speed",
+    "airco_horizontal",
+    "airco_vertical",
+    "eco_mode",
+    "health_mode",
+    "sleep_mode",
+    "display_light",
+    "self_cleaning",
+    "child_lock",
+    "mildew_proof",
+    "comfortable_wind",
+    "auxiliary_heat",
+    "power_limit",
+    "power_limit_enabled",
+    "temperature_unit",
+    "error_status"
   ],
   "capabilitiesOptions": {
     "target_temperature": {
       "min": 16,
-      "max": 30,
-      "step": 1
+      "max": 32,
+      "step": 0.5
     }
   },
   "energy": {
