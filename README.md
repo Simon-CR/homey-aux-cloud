@@ -98,8 +98,8 @@ The app exposes these capabilities based on what your specific device supports:
 
 **Extended Capabilities (Device-Dependent):**
 - `fan_speed` - Fan speed (auto, low, medium, high, turbo, mute)
-- `airco_vertical` - Vertical swing/airflow direction
-- `airco_horizontal` - Horizontal swing/airflow direction
+- `airco_vertical` - Vertical swing/airflow direction (see [Swing Position Support](#swing-position-support))
+- `airco_horizontal` - Horizontal swing/airflow direction (see [Swing Position Support](#swing-position-support))
 - `eco_mode` - Energy saving mode
 - `health_mode` - Health/ionizer function
 - `sleep_mode` - Sleep mode for quieter nighttime operation
@@ -115,6 +115,26 @@ The app exposes these capabilities based on what your specific device supports:
 - `error_status` - Current error status (read-only)
 
 > **Note:** Not all devices support all capabilities. The app automatically detects which features your specific device supports and only shows those controls.
+
+### Swing Position Support
+
+The vertical and horizontal swing controls support two modes depending on your AC unit's capabilities:
+
+**All Units Support:**
+- `Fixed` - Vanes stay in a fixed position (not moving)
+- `Swing` - Vanes continuously oscillate
+
+**Some Units Also Support Fixed Positions:**
+- Vertical: Up, Upper, Middle, Lower, Down
+- Horizontal: Left, Left-Center, Center, Right-Center, Right
+
+**Automatic Detection:** When you first add a device, the app tests whether your unit supports fixed vane positions:
+
+1. If the current vane setting is already a position (2-6), positions are supported
+2. Otherwise, the app briefly sets position 2, checks if the device accepts it, then restores the original setting
+3. The detection result is stored and displayed in the device settings under "Feature Support"
+
+Units that don't support positions will only show the "Fixed" and "Swing" options in the picker.
 
 ## Troubleshooting
 
@@ -226,6 +246,18 @@ This app is a port of the excellent Home Assistant integration created by [@maee
 - API implementation based on reverse-engineered AUX Cloud / Broadlink protocols
 
 Special thanks to the Home Assistant community for documenting the AUX Cloud API.
+
+## API Documentation
+
+For developers and integrators, we provide comprehensive API documentation:
+
+📖 **[API_REFERENCE.md](./API_REFERENCE.md)** - Complete AUX Cloud API reference including:
+- Authentication & encryption details
+- Device control endpoints
+- Energy consumption data queries
+- All AC parameters and their values
+
+This documentation can help you build your own integrations for platforms like Home Assistant, OpenHAB, Node-RED, or custom smart home solutions.
 
 ## Support
 
