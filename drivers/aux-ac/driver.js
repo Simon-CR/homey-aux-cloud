@@ -18,7 +18,7 @@ class AuxACDriver extends Homey.Driver {
   async onPair(session) {
     let email = '';
     let password = '';
-    let region = 'eu';
+    let region = 'eu'; // Default to EU region
     let api = null;
     let devices = [];
 
@@ -28,38 +28,14 @@ class AuxACDriver extends Homey.Driver {
         email = data.username;
         password = data.password;
         
-        // For now, default to EU region
-        // We'll enhance this later with region selection
+        // Try to login with EU region first
         api = new AuxCloudAPI(region);
-        
         await api.login(email, password);
         
         return true;
       } catch (error) {
         this.error('Login failed:', error);
         throw new Error(this.homey.__('pair.login.error'));
-      }
-    });
-
-    // Handle region selection view
-    session.setHandler('showView', async (viewId) => {
-      if (viewId === 'select_region') {
-        // Return available regions for selection
-        return;
-      }
-    });
-
-    // Handle region selection
-    session.setHandler('select_region', async (selectedRegion) => {
-      try {
-        region = selectedRegion;
-        // Re-login with selected region
-        api = new AuxCloudAPI(region);
-        await api.login(email, password);
-        return true;
-      } catch (error) {
-        this.error('Region selection failed:', error);
-        throw new Error('Failed to connect to selected region');
       }
     });
 

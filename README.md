@@ -43,16 +43,14 @@ If your air conditioner uses the "AC Freedom" or "AUX Cloud" mobile app, it shou
 ### Pairing Your Devices
 
 1. **Login** - Enter your AUX Cloud account credentials (the same email and password you use in the AUX Cloud or AC Freedom mobile app)
-2. **Select Region** - Choose your region:
-   - **EU** - Europe (https://app-service-deu-f0e9ebbb.smarthomecs.de)
-   - **USA** - United States (https://app-service-usa-fd7cc04c.smarthomecs.com)
-   - **China** - China (https://app-service-chn-31a93883.ibroadlink.com)
-3. **Select Devices** - Choose which AC units you want to add to Homey
-4. **Done** - Your devices are now ready to use!
+2. **Select Devices** - Choose which AC units you want to add to Homey
+3. **Done** - Your devices are now ready to use!
+
+**Note**: The app currently defaults to the EU region. If you're in the USA or China, you may need to contact support for region configuration assistance.
 
 ### Region Selection
 
-Make sure to select the correct region based on where you created your AUX Cloud account. If you're not sure, try the region that matches your geographic location first.
+The app defaults to the EU region server. If you need to use a different region (USA or China), this will need to be configured manually by editing the device settings after pairing.
 
 ## Usage
 

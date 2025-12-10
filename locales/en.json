@@ -1,0 +1,10 @@
+{
+  "pair": {
+    "login": {
+      "error": "Failed to login. Please check your credentials and try again."
+    },
+    "list_devices": {
+      "error": "Failed to retrieve devices. Please try again."
+    }
+  }
+}
