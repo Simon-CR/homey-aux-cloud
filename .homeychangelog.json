@@ -1,5 +1,8 @@
 {
   "1.0.0": {
     "en": "Initial release - Control AUX Cloud-connected mini-split air conditioners and heat pumps"
+  },
+  "1.0.1": {
+    "en": "fixed some svg issues"
   }
 }
