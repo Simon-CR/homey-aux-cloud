@@ -8,6 +8,9 @@ const { AuxCloudAPI, AC_MODE, FAN_SPEED, AC_PARAMS } = require('../../lib/AuxClo
 // This prevents the "value reverting" issue (maeek/ha-aux-cloud #53)
 const SYNC_DELAY_MS = 5000;
 
+// Energy data polling interval (5 minutes - less frequent than state polling)
+const ENERGY_POLL_INTERVAL_MS = 5 * 60 * 1000;
+
 // Map Homey thermostat modes to AUX AC modes
 const HOMEY_MODE_TO_AUX = {
   'auto': AC_MODE.AUTO,
@@ -115,6 +118,11 @@ class AuxACDevice extends Homey.Device {
     // Track which optional capabilities this device supports
     this.supportedParams = new Set();
     
+    // Track swing position support (detected on first add)
+    // Some units only support on/off swing, others support fixed positions (2-6)
+    this.supportsVerticalPositions = store.supportsVerticalPositions || false;
+    this.supportsHorizontalPositions = store.supportsHorizontalPositions || false;
+    
     // Initialize API
     this.api = new AuxCloudAPI(store.region || 'eu');
     
@@ -170,8 +178,65 @@ class AuxACDevice extends Homey.Device {
       this.syncDeviceState().catch(this.error);
     }, 30000); // Poll every 30 seconds
 
+    // Start polling for energy data (less frequent)
+    this.energyPollInterval = this.homey.setInterval(() => {
+      this.syncEnergyData().catch(this.error);
+    }, ENERGY_POLL_INTERVAL_MS); // Poll every 5 minutes
+
     // Initial state sync - this will also detect which capabilities the device supports
     await this.syncDeviceState();
+    
+    // Initial energy sync
+    await this.syncEnergyData();
+
+    // Update device settings with device info (MAC address, etc.)
+    await this._updateDeviceInfo();
+    
+    // Apply swing capability options based on stored detection results
+    await this._updateSwingCapabilityOptions();
+  }
+
+  /**
+   * Update device settings with device information (MAC, product ID, etc.)
+   */
+  async _updateDeviceInfo() {
+    try {
+      const store = this.getStore();
+      const data = this.getData();
+
+      // Format MAC address with colons if not already formatted
+      let macAddress = store.mac || '-';
+      if (macAddress && macAddress.length === 12 && !macAddress.includes(':')) {
+        macAddress = macAddress.match(/.{1,2}/g).join(':').toUpperCase();
+      }
+
+      // Map region code to friendly name
+      const regionNames = {
+        'eu': 'Europe',
+        'usa': 'USA',
+        'cn': 'China'
+      };
+      const regionDisplay = regionNames[store.region] || store.region || '-';
+
+      // Format swing position support display
+      const verticalSupport = store.supportsVerticalPositions === true ? 'Supported' :
+                              store.supportsVerticalPositions === false ? 'Not Supported' : 'Unknown';
+      const horizontalSupport = store.supportsHorizontalPositions === true ? 'Supported' :
+                                store.supportsHorizontalPositions === false ? 'Not Supported' : 'Unknown';
+
+      await this.setSettings({
+        mac_address: macAddress,
+        product_id: store.productId || '-',
+        endpoint_id: data.id || '-',
+        region: regionDisplay,
+        supports_vertical_positions: verticalSupport,
+        supports_horizontal_positions: horizontalSupport
+      });
+
+      this.log(`Device info updated: MAC=${macAddress}, ProductID=${store.productId}`);
+    } catch (error) {
+      this.error('Failed to update device info settings:', error);
+    }
   }
 
   /**
@@ -185,9 +250,123 @@ class AuxACDevice extends Homey.Device {
 
   /**
    * onAdded is called when the user adds the device.
+   * Detects device-specific feature support.
    */
   async onAdded() {
     this.log('AUX AC device has been added');
+    
+    // Detect swing position support
+    await this._detectSwingPositionSupport();
+  }
+
+  /**
+   * Detect if the device supports fixed swing positions (2-6) or only on/off (0/1).
+   * Some AC units support setting specific vane positions, while others only support
+   * continuous swing mode. This detection tests by:
+   * 1. If current value is already 2-6, positions are supported
+   * 2. Otherwise, try setting position 2, check if it sticks, then restore original value
+   */
+  async _detectSwingPositionSupport() {
+    try {
+      this.log('Detecting swing position support...');
+      
+      // Get current swing values (use empty array to get all params since specific queries may not work)
+      const params = await this.api.getDeviceParams(this.deviceInfo, []);
+      const originalVdir = params.ac_vdir;
+      const originalHdir = params.ac_hdir;
+      
+      this.log(`Current swing values: vertical=${originalVdir}, horizontal=${originalHdir}`);
+      
+      // Check vertical swing position support
+      let supportsVertical = false;
+      if (originalVdir >= 2 && originalVdir <= 6) {
+        // Already at a position, so positions are supported
+        supportsVertical = true;
+        this.log('Vertical positions supported (current value is a position)');
+      } else if (originalVdir !== undefined) {
+        // Try setting to position 2 and see if it sticks
+        await this.api.setDeviceParams(this.deviceInfo, { ac_vdir: 2 });
+        await new Promise(r => this.homey.setTimeout(r, 3000));
+        
+        const testParams = await this.api.getDeviceParams(this.deviceInfo, []);
+        if (testParams.ac_vdir === 2) {
+          supportsVertical = true;
+          this.log('Vertical positions supported (test position accepted)');
+        } else {
+          this.log('Vertical positions NOT supported (test position rejected)');
+        }
+        
+        // Restore original value
+        await this.api.setDeviceParams(this.deviceInfo, { ac_vdir: originalVdir });
+      }
+      
+      // Check horizontal swing position support
+      let supportsHorizontal = false;
+      if (originalHdir >= 2 && originalHdir <= 6) {
+        supportsHorizontal = true;
+        this.log('Horizontal positions supported (current value is a position)');
+      } else if (originalHdir !== undefined) {
+        // Try setting to position 2 and see if it sticks
+        await this.api.setDeviceParams(this.deviceInfo, { ac_hdir: 2 });
+        await new Promise(r => this.homey.setTimeout(r, 3000));
+        
+        const testParams2 = await this.api.getDeviceParams(this.deviceInfo, []);
+        if (testParams2.ac_hdir === 2) {
+          supportsHorizontal = true;
+          this.log('Horizontal positions supported (test position accepted)');
+        } else {
+          this.log('Horizontal positions NOT supported (test position rejected)');
+        }
+        
+        // Restore original value
+        await this.api.setDeviceParams(this.deviceInfo, { ac_hdir: originalHdir });
+      }
+      
+      // Store the results for future use
+      this.supportsVerticalPositions = supportsVertical;
+      this.supportsHorizontalPositions = supportsHorizontal;
+      
+      await this.setStoreValue('supportsVerticalPositions', supportsVertical);
+      await this.setStoreValue('supportsHorizontalPositions', supportsHorizontal);
+      
+      this.log(`Swing position detection complete: vertical=${supportsVertical}, horizontal=${supportsHorizontal}`);
+      
+      // Update capability options to hide position options if not supported
+      await this._updateSwingCapabilityOptions();
+      
+    } catch (error) {
+      this.error('Failed to detect swing position support:', error);
+    }
+  }
+
+  /**
+   * Update swing capability options based on detected position support.
+   * If positions are not supported, limit the picker to just Fixed/Swing options.
+   */
+  async _updateSwingCapabilityOptions() {
+    try {
+      if (this.hasCapability('airco_vertical') && !this.supportsVerticalPositions) {
+        this.log('Limiting vertical swing to Fixed/Swing only');
+        await this.setCapabilityOptions('airco_vertical', {
+          values: [
+            { id: 'off', title: { en: 'Fixed' } },
+            { id: 'on', title: { en: 'Swing' } }
+          ]
+        });
+      }
+      
+      if (this.hasCapability('airco_horizontal') && !this.supportsHorizontalPositions) {
+        this.log('Limiting horizontal swing to Fixed/Swing only');
+        await this.setCapabilityOptions('airco_horizontal', {
+          values: [
+            { id: 'off', title: { en: 'Fixed' } },
+            { id: 'on', title: { en: 'Swing' } }
+          ]
+        });
+      }
+    } catch (error) {
+      this.error('Failed to update swing capability options:', error);
+    }
   }
 
   /**
@@ -210,9 +389,12 @@ class AuxACDevice extends Homey.Device {
   async onDeleted() {
     this.log('AUX AC device has been deleted');
     
-    // Clear polling interval
+    // Clear polling intervals
     if (this.pollInterval) {
       this.homey.clearInterval(this.pollInterval);
+    }
+    if (this.energyPollInterval) {
+      this.homey.clearInterval(this.energyPollInterval);
     }
   }
 
@@ -223,9 +405,12 @@ class AuxACDevice extends Homey.Device {
   async onUninit() {
     this.log('AUX AC device is being uninitialized');
     
-    // Clear polling interval
+    // Clear polling intervals
     if (this.pollInterval) {
       this.homey.clearInterval(this.pollInterval);
+    }
+    if (this.energyPollInterval) {
+      this.homey.clearInterval(this.energyPollInterval);
     }
     
     // Clean up API instance
@@ -393,6 +578,68 @@ class AuxACDevice extends Homey.Device {
       // This prevents transient network issues from causing device flicker
       if (this._syncFailures >= 3) {
         this.setUnavailable('Failed to sync state - check connection').catch(this.error);
+      }
+    }
+  }
+
+  /**
+   * Sync energy consumption data from cloud
+   * Fetches yearly cumulative energy data and updates meter_power capability
+   */
+  async syncEnergyData() {
+    try {
+      if (!this.hasCapability('meter_power')) {
+        return;
+      }
+
+      // Get current year for date range
+      const now = new Date();
+      const year = now.getFullYear();
+      const startDate = `${year}-01-01`;
+      const endDate = `${year}-12-31`;
+
+      // Query yearly energy consumption data
+      // Using fw_auxoverseayearconsum_v1 for overseas devices (gives monthly totals for the year)
+      const result = await this.api.queryDeviceData(
+        this.deviceInfo,
+        'fw_auxoverseayearconsum_v1',
+        startDate,
+        endDate
+      );
+
+      if (result.status === 0 && result.table && result.table.length > 0) {
+        const deviceData = result.table[0];
+        
+        // Sum up all monthly values to get yearly total
+        let totalEnergy = 0;
+        if (deviceData.values && deviceData.values.length > 0) {
+          for (const entry of deviceData.values) {
+            // tenelec is energy in kWh
+            if (entry.tenelec !== undefined) {
+              totalEnergy += entry.tenelec;
+            }
+          }
+        }
+
+        // Update meter_power capability (in kWh)
+        await this.setCapabilityValue('meter_power', totalEnergy).catch(this.error);
+        this.log(`Energy data updated: ${totalEnergy.toFixed(2)} kWh (${year})`);
+        
+        // Reset energy sync failures on success
+        this._energySyncFailures = 0;
+      } else {
+        this.log('No energy data available or unsupported by device');
+      }
+
+    } catch (error) {
+      this.error('Failed to sync energy data:', error);
+      
+      // Track failures but don't mark device unavailable for energy sync issues
+      this._energySyncFailures = (this._energySyncFailures || 0) + 1;
+      
+      // If energy data consistently fails, log it but continue
+      if (this._energySyncFailures >= 3) {
+        this.log('Energy data sync repeatedly failed - device may not support energy monitoring');
       }
     }
   }

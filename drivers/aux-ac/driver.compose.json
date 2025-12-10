@@ -4,12 +4,105 @@
   },
   "platforms": ["local", "cloud"],
   "class": "thermostat",
+  "settings": [
+    {
+      "type": "group",
+      "label": {
+        "en": "Device Information"
+      },
+      "children": [
+        {
+          "id": "mac_address",
+          "type": "label",
+          "label": {
+            "en": "MAC Address"
+          },
+          "value": "-",
+          "hint": {
+            "en": "The MAC address of your AUX device"
+          }
+        },
+        {
+          "id": "product_id",
+          "type": "label",
+          "label": {
+            "en": "Product ID"
+          },
+          "value": "-",
+          "hint": {
+            "en": "The product identifier used by AUX Cloud"
+          }
+        },
+        {
+          "id": "endpoint_id",
+          "type": "label",
+          "label": {
+            "en": "Endpoint ID"
+          },
+          "value": "-",
+          "hint": {
+            "en": "The unique device endpoint identifier"
+          }
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "label": {
+        "en": "Connection"
+      },
+      "children": [
+        {
+          "id": "region",
+          "type": "label",
+          "label": {
+            "en": "Region"
+          },
+          "value": "-",
+          "hint": {
+            "en": "The AUX Cloud region for this device"
+          }
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "label": {
+        "en": "Feature Support"
+      },
+      "children": [
+        {
+          "id": "supports_vertical_positions",
+          "type": "label",
+          "label": {
+            "en": "Vertical Vane Positions"
+          },
+          "value": "Unknown",
+          "hint": {
+            "en": "Whether this unit supports fixed vertical vane positions (Up, Middle, Down, etc.) or only swing on/off"
+          }
+        },
+        {
+          "id": "supports_horizontal_positions",
+          "type": "label",
+          "label": {
+            "en": "Horizontal Vane Positions"
+          },
+          "value": "Unknown",
+          "hint": {
+            "en": "Whether this unit supports fixed horizontal vane positions (Left, Center, Right, etc.) or only swing on/off"
+          }
+        }
+      ]
+    }
+  ],
   "capabilities": [
     "onoff",
     "target_temperature",
     "measure_temperature",
     "thermostat_mode",
     "fan_speed",
+    "meter_power",
     "airco_horizontal",
     "airco_vertical",
     "eco_mode",
@@ -34,10 +127,8 @@
     }
   },
   "energy": {
-    "approximation": {
-      "usageOn": 1000,
-      "usageOff": 0
-    }
+    "cumulative": true,
+    "cumulativeImportedCapability": "meter_power"
   },
   "images": {
     "small": "/drivers/aux-ac/assets/images/small.png",

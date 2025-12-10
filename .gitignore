@@ -10,6 +10,16 @@ node_modules/
 # Local memory bank data
 memory-bank/
 
+# Test files (may contain credentials)
+test-*.js
+
+# APK files and decompiled output
+*.apk
+jadx_output/
+temp_apk_analysis/
+
+# Temporary analysis files
+electric_strings.txt
 
 # Added by Homey CLI
 /.homeybuild/
