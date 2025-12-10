@@ -2,6 +2,7 @@
   "name": {
     "en": "AUX Air Conditioner"
   },
+  "platforms": ["local", "cloud"],
   "class": "thermostat",
   "capabilities": [
     "onoff",

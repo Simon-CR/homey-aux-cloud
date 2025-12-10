@@ -6,3 +6,10 @@ node_modules/
 .idea/
 *.tmp
 *.swp
+
+# Local memory bank data
+memory-bank/
+
+
+# Added by Homey CLI
+/.homeybuild/

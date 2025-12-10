@@ -34,13 +34,6 @@
       }
     ]
   },
-  "contributing": {
-    "donate": {
-      "github": {
-        "username": "Simon-CR"
-      }
-    }
-  },
   "bugs": {
     "url": "https://github.com/Simon-CR/homey-aux-cloud/issues"
   },
