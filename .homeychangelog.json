@@ -4,5 +4,8 @@
   },
   "1.0.1": {
     "en": "fixed some svg issues"
+  },
+  "1.0.2": {
+    "en": "fix readme"
   }
 }
