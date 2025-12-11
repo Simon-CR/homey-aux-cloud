@@ -5,8 +5,7 @@
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": [
-    "local",
-    "cloud"
+    "local"
   ],
   "name": {
     "en": "AUX Cloud"
@@ -47,8 +46,7 @@
         "en": "AUX Air Conditioner"
       },
       "platforms": [
-        "local",
-        "cloud"
+        "local"
       ],
       "class": "thermostat",
       "settings": [

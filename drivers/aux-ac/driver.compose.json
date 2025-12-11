@@ -2,7 +2,7 @@
   "name": {
     "en": "AUX Air Conditioner"
   },
-  "platforms": ["local", "cloud"],
+  "platforms": ["local"],
   "class": "thermostat",
   "settings": [
     {
