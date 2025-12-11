@@ -20,6 +20,6 @@
     "hvac",
     "climate"
   ],
-  "author": "Simon-CR",
+  "author": "Simon Cloutier <scr_homey@cloutier.one>",
   "license": "GPL-3.0"
 }
