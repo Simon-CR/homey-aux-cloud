@@ -10,7 +10,7 @@
     {
       "id": "off",
       "title": {
-        "en": "Off"
+        "en": "Fixed"
       }
     },
     {
@@ -22,31 +22,31 @@
     {
       "id": "pos1",
       "title": {
-        "en": "Position 1"
+        "en": "Left"
       }
     },
     {
       "id": "pos2",
       "title": {
-        "en": "Position 2"
+        "en": "Left-Center"
       }
     },
     {
       "id": "pos3",
       "title": {
-        "en": "Position 3"
+        "en": "Center"
       }
     },
     {
       "id": "pos4",
       "title": {
-        "en": "Position 4"
+        "en": "Right-Center"
       }
     },
     {
       "id": "pos5",
       "title": {
-        "en": "Position 5"
+        "en": "Right"
       }
     }
   ]
