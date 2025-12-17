@@ -603,7 +603,7 @@ class AuxACDevice extends Homey.Device {
       // Update temperature unit - with validation
       // Update temperature unit (but skip if user recently changed it manually)
       if (params.tempunit !== undefined && this.hasCapability('temperature_unit')) {
-        this.log(`Cloud reports tempunit: ${params.tempunit} (1=C, 0=F)`);
+        this.log(`Cloud reports tempunit: ${params.tempunit} (1=C, 2=F)`);
 
         // Skip sync if user changed it in the last 60 seconds
         const now = Date.now();
@@ -612,7 +612,8 @@ class AuxACDevice extends Homey.Device {
         if (timeSinceUserChange < 60000) {
           this.log(`Skipping tempunit sync (user changed it ${Math.round(timeSinceUserChange / 1000)}s ago)`);
         } else {
-          const unit = params.tempunit === 1 ? 'celsius' : 'fahrenheit';
+          // 1=Celsius, 2=Fahrenheit
+          const unit = params.tempunit === 1 ? 'celsius' : (params.tempunit === 2 ? 'fahrenheit' : 'celsius');
           const validUnits = ['celsius', 'fahrenheit'];
           if (validUnits.includes(unit)) {
             try {
@@ -1077,8 +1078,8 @@ class AuxACDevice extends Homey.Device {
       // Track when user manually changed this to prevent sync from overwriting
       this._lastTempUnitChange = Date.now();
 
-      // 1 = Celsius, 0 = Fahrenheit
-      const tempunitValue = value === 'celsius' ? 1 : 0;
+      // 1 = Celsius, 2 = Fahrenheit (NOT 0!)
+      const tempunitValue = value === 'celsius' ? 1 : 2;
       const params = {
         tempunit: tempunitValue
       };
