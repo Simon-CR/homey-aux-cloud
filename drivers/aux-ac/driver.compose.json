@@ -3,7 +3,8 @@
     "en": "AUX Air Conditioner"
   },
   "platforms": [
-    "local"
+    "local",
+    "cloud"
   ],
   "class": "thermostat",
   "settings": [
@@ -140,7 +141,7 @@
   "pair": [
     {
       "id": "login_view",
-      "file": "/drivers/aux-ac/pair/login_view.html",
+      "file": "pair/login_view.html",
       "navigation": {
         "next": "list_devices"
       }
