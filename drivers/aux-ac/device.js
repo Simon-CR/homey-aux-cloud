@@ -296,8 +296,9 @@ class AuxACDevice extends Homey.Device {
           this.log('Vertical positions NOT supported (test position rejected)');
         }
 
-        // Restore original value
+        // Restore original value and wait longer for device to process
         await this.api.setDeviceParams(this.deviceInfo, { ac_vdir: originalVdir });
+        await new Promise(r => this.homey.setTimeout(r, 2000)); // Wait for restore
       }
 
       // Check horizontal swing position support
@@ -318,8 +319,9 @@ class AuxACDevice extends Homey.Device {
           this.log('Horizontal positions NOT supported (test position rejected)');
         }
 
-        // Restore original value
+        // Restore original value and wait longer for device to process
         await this.api.setDeviceParams(this.deviceInfo, { ac_hdir: originalHdir });
+        await new Promise(r => this.homey.setTimeout(r, 2000)); // Wait for restore
       }
 
       // Store the results for future use
@@ -499,19 +501,33 @@ class AuxACDevice extends Homey.Device {
       // Update swing modes - only if device supports them AND value is valid
       if (params.ac_vdir !== undefined && this.hasCapability('airco_vertical')) {
         const homeySwing = AUX_SWING_TO_HOMEY[params.ac_vdir];
-        if (homeySwing) {
-          await this.setCapabilityValue('airco_vertical', homeySwing).catch(this.error);
+        if (homeySwing !== undefined) {
+          // Double-check the value exists in capability options before setting
+          try {
+            await this.setCapabilityValue('airco_vertical', homeySwing);
+          } catch (err) {
+            this.error(`Failed to set vertical swing to ${homeySwing}:`, err);
+            // Set to safe default on error
+            await this.setCapabilityValue('airco_vertical', 'off').catch(this.error);
+          }
         } else {
-          this.log(`Unknown vertical swing value: ${params.ac_vdir}, skipping update`);
+          this.log(`Unknown vertical swing value: ${params.ac_vdir}, defaulting to 'off'`);
+          await this.setCapabilityValue('airco_vertical', 'off').catch(this.error);
         }
       }
 
       if (params.ac_hdir !== undefined && this.hasCapability('airco_horizontal')) {
         const homeySwing = AUX_SWING_TO_HOMEY[params.ac_hdir];
-        if (homeySwing) {
-          await this.setCapabilityValue('airco_horizontal', homeySwing).catch(this.error);
+        if (homeySwing !== undefined) {
+          try {
+            await this.setCapabilityValue('airco_horizontal', homeySwing);
+          } catch (err) {
+            this.error(`Failed to set horizontal swing to ${homeySwing}:`, err);
+            await this.setCapabilityValue('airco_horizontal', 'off').catch(this.error);
+          }
         } else {
-          this.log(`Unknown horizontal swing value: ${params.ac_hdir}, skipping update`);
+          this.log(`Unknown horizontal swing value: ${params.ac_hdir}, defaulting to 'off'`);
+          await this.setCapabilityValue('airco_horizontal', 'off').catch(this.error);
         }
       }
 
