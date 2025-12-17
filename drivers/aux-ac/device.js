@@ -748,9 +748,10 @@ class AuxACDevice extends Homey.Device {
         // Update meter_power capability with yearly total
         await this.setCapabilityValue('meter_power', totalEnergy).catch(this.error);
 
-        // Create Insights log entry for energy tracking (log is auto-created by Homey)
+        // Create Insights log entry for energy tracking
         try {
-          await this.homey.insights.createEntry('meter_power', totalEnergy);
+          const meterLog = await this.homey.insights.createLog('meter_power', { title: 'Power Consumption' });
+          await meterLog.createEntry({ value: totalEnergy });
           this.log(`Energy data logged to Insights: ${totalEnergy.toFixed(2)} kWh`);
         } catch (err) {
           this.error('Failed to create Insights log entry:', err);
