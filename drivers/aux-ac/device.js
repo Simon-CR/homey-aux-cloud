@@ -188,6 +188,14 @@ class AuxACDevice extends Homey.Device {
       this.syncDeviceState().catch(this.error);
     }, ENERGY_POLL_INTERVAL_MS); // Poll every 5 minutes
 
+    // Initialize Homey Insights logging for energy tracking
+    try {
+      this.meterPowerLog = await this.homey.insights.getLog('meter_power');
+      this.log('Insights logging initialized for meter_power');
+    } catch (err) {
+      this.error('Failed to initialize Insights logging:', err);
+    }
+
     // Initial state sync - this will detect capabilities and validate all values
     await this.syncDeviceState();
 
@@ -735,8 +743,19 @@ class AuxACDevice extends Homey.Device {
           }
         }
 
-        // Update meter_power capability (in kWh)
+        // Update meter_power capability with yearly total
         await this.setCapabilityValue('meter_power', totalEnergy).catch(this.error);
+
+        // Create Insights log entry for energy tracking
+        if (this.meterPowerLog) {
+          try {
+            await this.meterPowerLog.createEntry({ value: totalEnergy });
+            this.log(`Energy data logged to Insights: ${totalEnergy.toFixed(2)} kWh`);
+          } catch (err) {
+            this.error('Failed to create Insights log entry:', err);
+          }
+        }
+
         this.log(`Energy data updated: ${totalEnergy.toFixed(2)} kWh (${year})`);
 
         // Reset energy sync failures on success

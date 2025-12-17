@@ -470,23 +470,78 @@
       }
     },
     "power_limit": {
-      "type": "number",
+      "type": "enum",
       "title": {
         "en": "Power Limiter"
       },
       "icon": "/assets/icons/power.svg",
-      "uiComponent": "slider",
+      "uiComponent": "picker",
       "getable": true,
       "setable": true,
-      "min": 0,
-      "max": 90,
-      "step": 10,
-      "decimals": 0,
-      "units": {
-        "en": "%"
-      },
+      "values": [
+        {
+          "id": "0",
+          "title": {
+            "en": "Disabled (0%)"
+          }
+        },
+        {
+          "id": "10",
+          "title": {
+            "en": "10%"
+          }
+        },
+        {
+          "id": "20",
+          "title": {
+            "en": "20%"
+          }
+        },
+        {
+          "id": "30",
+          "title": {
+            "en": "30%"
+          }
+        },
+        {
+          "id": "40",
+          "title": {
+            "en": "40%"
+          }
+        },
+        {
+          "id": "50",
+          "title": {
+            "en": "50%"
+          }
+        },
+        {
+          "id": "60",
+          "title": {
+            "en": "60%"
+          }
+        },
+        {
+          "id": "70",
+          "title": {
+            "en": "70%"
+          }
+        },
+        {
+          "id": "80",
+          "title": {
+            "en": "80%"
+          }
+        },
+        {
+          "id": "90",
+          "title": {
+            "en": "90%"
+          }
+        }
+      ],
       "desc": {
-        "en": "Limit maximum power consumption. Set to 0% to disable. Higher values allow more power use."
+        "en": "Limit maximum power consumption. Set to Disabled for no limit."
       },
       "hint": {
         "en": "Reduces energy usage by limiting compressor power. May affect cooling/heating performance."
