@@ -172,8 +172,9 @@ class AuxACDevice extends Homey.Device {
       values: ['auto', 'cool', 'heat', 'dry', 'fan_only']
     }).catch(this.error);
 
-    // Initialize vane capabilities with safe defaults to prevent React crashes
-    // This ensures no invalid values are present from previous versions
+    // Initialize ALL picker capabilities with safe defaults to prevent React crashes
+    // This ensures no invalid values are present from previous versions or bad syncs
+
     if (this.hasCapability('airco_vertical')) {
       const currentVertical = this.getCapabilityValue('airco_vertical');
       const validValues = ['off', 'on', 'pos1', 'pos2', 'pos3', 'pos4', 'pos5'];
@@ -189,6 +190,24 @@ class AuxACDevice extends Homey.Device {
       if (!validValues.includes(currentHorizontal)) {
         this.log(`Resetting invalid horizontal swing value: ${currentHorizontal} -> off`);
         await this.setCapabilityValue('airco_horizontal', 'off').catch(this.error);
+      }
+    }
+
+    if (this.hasCapability('fan_speed')) {
+      const currentFan = this.getCapabilityValue('fan_speed');
+      const validValues = ['auto', 'low', 'mid', 'high', 'turbo', 'mute', 'mid_lower', 'mid_higher'];
+      if (!validValues.includes(currentFan)) {
+        this.log(`Resetting invalid fan_speed value: ${currentFan} -> auto`);
+        await this.setCapabilityValue('fan_speed', 'auto').catch(this.error);
+      }
+    }
+
+    if (this.hasCapability('temperature_unit')) {
+      const currentUnit = this.getCapabilityValue('temperature_unit');
+      const validValues = ['celsius', 'fahrenheit'];
+      if (!validValues.includes(currentUnit)) {
+        this.log(`Resetting invalid temperature_unit value: ${currentUnit} -> celsius`);
+        await this.setCapabilityValue('temperature_unit', 'celsius').catch(this.error);
       }
     }
 
