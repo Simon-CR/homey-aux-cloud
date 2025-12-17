@@ -58,5 +58,8 @@
   },
   "1.0.19": {
     "en": "fix vane"
+  },
+  "1.0.20": {
+    "en": "change validation timing"
   }
 }
