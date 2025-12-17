@@ -173,23 +173,28 @@ class AuxACDevice extends Homey.Device {
     }).catch(this.error);
 
     // CRITICAL: Set initial safe values for ALL picker capabilities BEFORE sync
-    // This prevents React UI from crashing when it loads before sync completes
-    // The sync will then update these to actual values
+    // Use Promise.all() to set them ALL simultaneously to prevent UI loading mid-setup
+    const initialValuePromises = [];
+
     if (this.hasCapability('thermostat_mode')) {
-      await this.setCapabilityValue('thermostat_mode', 'auto').catch(this.error);
+      initialValuePromises.push(this.setCapabilityValue('thermostat_mode', 'auto'));
     }
     if (this.hasCapability('fan_speed')) {
-      await this.setCapabilityValue('fan_speed', 'auto').catch(this.error);
+      initialValuePromises.push(this.setCapabilityValue('fan_speed', 'auto'));
     }
     if (this.hasCapability('airco_vertical')) {
-      await this.setCapabilityValue('airco_vertical', 'off').catch(this.error);
+      initialValuePromises.push(this.setCapabilityValue('airco_vertical', 'off'));
     }
     if (this.hasCapability('airco_horizontal')) {
-      await this.setCapabilityValue('airco_horizontal', 'off').catch(this.error);
+      initialValuePromises.push(this.setCapabilityValue('airco_horizontal', 'off'));
     }
     if (this.hasCapability('temperature_unit')) {
-      await this.setCapabilityValue('temperature_unit', 'celsius').catch(this.error);
+      initialValuePromises.push(this.setCapabilityValue('temperature_unit', 'celsius'));
     }
+
+    // Wait for ALL initial values to be set before continuing
+    await Promise.all(initialValuePromises).catch(this.error);
+    this.log('All picker capabilities initialized with safe defaults');
 
     // Start polling for state updates
     // Use this.homey.setInterval for automatic cleanup on Homey Cloud
