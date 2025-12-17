@@ -615,8 +615,10 @@ class AuxACDevice extends Homey.Device {
 
       // Update power limit capabilities
       if (params.pwrlimit !== undefined && this.hasCapability('power_limit')) {
-        this.log(`Cloud reports pwrlimit: ${params.pwrlimit}`);
-        await this.setCapabilityValue('power_limit', params.pwrlimit).catch(this.error);
+        // Convert number to string for enum picker
+        const pwrLimitStr = String(params.pwrlimit);
+        this.log(`Cloud reports pwrlimit: ${params.pwrlimit} (setting as "${pwrLimitStr}")`);
+        await this.setCapabilityValue('power_limit', pwrLimitStr).catch(this.error);
       }
 
       if (params.pwrlimitswitch !== undefined && this.hasCapability('power_limit_enabled')) {
@@ -1124,8 +1126,11 @@ class AuxACDevice extends Homey.Device {
     this.log('power_limit changed to:', value);
 
     try {
+      // Convert string value from picker to number
+      const numValue = parseInt(value, 10);
+
       const params = {
-        pwrlimit: Math.round(value)
+        pwrlimit: numValue
       };
 
       const success = await this.api.setDeviceParams(this.deviceInfo, params);
