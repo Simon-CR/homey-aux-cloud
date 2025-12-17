@@ -16,22 +16,27 @@ class AuxACDriver extends Homey.Driver {
    * onPair is called when a user starts pairing.
    */
   async onPair(session) {
-    let email = '';
-    let password = '';
-    let region = 'eu'; // Default to EU region
-    let api = null;
+    let email;
+    let password;
+    let region = 'eu'; // Default region
+    let api;
     let devices = [];
     let skippedDevices = []; // Track unsupported devices for user feedback
+
+    // Handle region selection from custom view
+    session.setHandler('region_selected', async (data) => {
+      this.log('Region selected:', data.region);
+      region = data.region;
+      return true;
+    });
 
     // Handle login credentials
     session.setHandler('login', async (data) => {
       this.log('Login handler triggered', JSON.stringify(data));
+      this.log('Using region:', region);
       try {
         email = data.username;
         password = data.password;
-        if (data.region) {
-          region = data.region;
-        }
 
         this.log(`Attempting login for user: ${email} in region: ${region}`);
 

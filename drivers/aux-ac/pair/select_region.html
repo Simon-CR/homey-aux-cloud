@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Select Region</title>
+    <script src="/homey.js" data-origin="pair"></script>
+    <style>
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .region-select {
+            width: 100%;
+            max-width: 300px;
+            padding: 12px;
+            margin: 20px auto;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .info {
+            color: #666;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Select Your Region</h2>
+    <p class="info">Choose the region where your AUX Cloud account is registered:</p>
+
+    <select id="region" class="region-select">
+        <option value="eu">Europe</option>
+        <option value="usa">United States</option>
+        <option value="china">China</option>
+    </select>
+
+    <script>
+        function onHomeyReady(Homey) {
+            Homey.setTitle('Select Region');
+
+            var regionSelect = document.getElementById('region');
+
+            // Auto-advance when selection changes
+            regionSelect.addEventListener('change', function () {
+                var selectedRegion = regionSelect.value;
+
+                // Emit the region to the driver
+                Homey.emit('region_selected', { region: selectedRegion }, function (err) {
+                    if (!err) {
+                        Homey.nextView();
+                    }
+                });
+            });
+
+            // Also allow manual continue if needed
+            Homey.on('continue', function (callback) {
+                var selectedRegion = regionSelect.value;
+                callback(null, { region: selectedRegion });
+            });
+        }
+    </script>
+</body>
+
+</html>
