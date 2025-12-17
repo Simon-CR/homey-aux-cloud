@@ -15,3 +15,6 @@ memory-bank/
 test-*.js
 debug-*.js
 *.test.js
+.homeybuild/
+jadx_output/
+temp_apk_analysis/
