@@ -82,5 +82,8 @@
   },
   "1.0.27": {
     "en": "syncDeviceState"
+  },
+  "1.0.29": {
+    "en": "finally envtemp is showing"
   }
 }
