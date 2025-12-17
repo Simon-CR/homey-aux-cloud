@@ -1,7 +1,7 @@
 {
   "type": "number",
   "title": {
-    "en": "Power Limit %"
+    "en": "Power Limiter"
   },
   "icon": "/assets/icons/power.svg",
   "uiComponent": "slider",
@@ -14,6 +14,9 @@
     "en": "%"
   },
   "desc": {
-    "en": "Maximum power consumption"
+    "en": "Limit maximum power consumption. Set to 0% to disable. Higher values allow more power use."
+  },
+  "hint": {
+    "en": "Reduces energy usage by limiting compressor power. May affect cooling/heating performance."
   }
 }
