@@ -490,7 +490,16 @@ class AuxACDevice extends Homey.Device {
         this.log(`Setting current temperature: ${currentTemp}°C (envtemp=${params.envtemp})`);
         await this.setCapabilityValue('measure_temperature', currentTemp).catch(this.error);
       } else {
-        this.log('envtemp not reported by cloud - current temperature unavailable');
+        // Device doesn't report current temperature - remove capability
+        if (this.hasCapability('measure_temperature')) {
+          this.log('Device does not support envtemp - removing measure_temperature capability');
+          try {
+            await this.removeCapability('measure_temperature');
+          } catch (err) {
+            // Capability might already be removed, ignore error
+            this.log('Could not remove measure_temperature capability:', err.message);
+          }
+        }
       }
 
       if (params.ac_mode !== undefined) {
