@@ -490,11 +490,19 @@ class AuxACDevice extends Homey.Device {
         }
       }
 
-      // Update fan speed
-      if (params.ac_mark !== undefined) {
+      // Update fan speed - with validation
+      if (params.ac_mark !== undefined && this.hasCapability('fan_speed')) {
         const homeyFan = AUX_FAN_TO_HOMEY[params.ac_mark];
-        if (homeyFan && this.hasCapability('fan_speed')) {
-          await this.setCapabilityValue('fan_speed', homeyFan).catch(this.error);
+        if (homeyFan !== undefined) {
+          try {
+            await this.setCapabilityValue('fan_speed', homeyFan);
+          } catch (err) {
+            this.error(`Failed to set fan_speed to ${homeyFan}:`, err);
+            await this.setCapabilityValue('fan_speed', 'auto').catch(this.error);
+          }
+        } else {
+          this.log(`Unknown fan speed value: ${params.ac_mark}, defaulting to 'auto'`);
+          await this.setCapabilityValue('fan_speed', 'auto').catch(this.error);
         }
       }
 
@@ -577,10 +585,21 @@ class AuxACDevice extends Homey.Device {
         await this.setCapabilityValue('power_limit_enabled', params.pwrlimitswitch === 1).catch(this.error);
       }
 
-      // Update temperature unit
+      // Update temperature unit - with validation
       if (params.tempunit !== undefined && this.hasCapability('temperature_unit')) {
         const unit = params.tempunit === 1 ? 'celsius' : 'fahrenheit';
-        await this.setCapabilityValue('temperature_unit', unit).catch(this.error);
+        const validUnits = ['celsius', 'fahrenheit'];
+        if (validUnits.includes(unit)) {
+          try {
+            await this.setCapabilityValue('temperature_unit', unit);
+          } catch (err) {
+            this.error(`Failed to set temperature_unit to ${unit}:`, err);
+            await this.setCapabilityValue('temperature_unit', 'celsius').catch(this.error);
+          }
+        } else {
+          this.log(`Unknown temperature unit: ${params.tempunit}, defaulting to celsius`);
+          await this.setCapabilityValue('temperature_unit', 'celsius').catch(this.error);
+        }
       }
 
       // Update error status (read-only diagnostic)
