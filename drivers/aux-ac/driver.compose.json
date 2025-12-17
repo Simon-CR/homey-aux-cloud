@@ -140,7 +140,10 @@
   "pair": [
     {
       "id": "custom_login",
-      "file": "/drivers/aux-ac/pair/custom_login.html"
+      "file": "/drivers/aux-ac/pair/custom_login.html",
+      "navigation": {
+        "next": "list_devices"
+      }
     },
     {
       "id": "list_devices",
