@@ -77,7 +77,19 @@
 
 <body>
 
-    <img class="logo" src="../assets/icon.svg" alt="Logo">
+    <img class="logo" src="icon.svg" alt="Logo">
+
+    <!-- ... -->
+    // Failsafe: Manual bootstrap if onHomeyReady doesn't fire
+    setTimeout(function() {
+    if (typeof Homey !== 'undefined') {
+    log('Homey object exists but onHomeyReady did not fire. BOOTSTRAPPING MANUALLY...');
+    onHomeyReady(Homey);
+    } else {
+    log('FATAL: 0.5s passed, Homey object still undefined.');
+    }
+    }, 500); // 0.5s timeout for fast responsiveness
+    </script>
 
     <div class="header">
         <h2 data-i18n="pair.login.title">Login to AUX Cloud</h2>
@@ -109,7 +121,7 @@
     <button id="login-btn" data-i18n="pair.login.button">Log In</button>
 
     <div id="debug-console"
-        style="margin-top: 20px; padding: 10px; background: #f0f0f0; border: 1px solid #ccc; font-family: monospace; font-size: 10px; max-height: 100px; overflow-y: auto; display: block;">
+        style="margin-top: 20px; padding: 10px; background: #f0f0f0; border: 1px solid #ccc; font-family: monospace; font-size: 10px; max-height: 100px; overflow-y: auto; display: block; -webkit-user-select: text; user-select: text;">
         Debug Log:<br>
     </div>
 
@@ -217,16 +229,15 @@
             });
         }
 
-        // Failsafe: Check if Homey exists if onHomeyReady doesn't fire
+        // Failsafe: Manual bootstrap if onHomeyReady doesn't fire
         setTimeout(function () {
             if (typeof Homey !== 'undefined') {
-                log('Homey object exists but onHomeyReady did not fire. Configuring manually...');
-                // Check if we need to manually call it or if it's already done? 
-                // We'll just log for now to see state.
+                log('Homey object exists but onHomeyReady did not fire. BOOTSTRAPPING MANUALLY...');
+                onHomeyReady(Homey);
             } else {
-                log('WARNING: 3s passed, Homey object still undefined.');
+                log('FATAL: 3s passed, Homey object still undefined.');
             }
-        }, 3000);
+        }, 1000); // 1s timeout
     </script>
 </body>
 
