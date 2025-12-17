@@ -743,501 +743,502 @@ class AuxACDevice extends Homey.Device {
               totalEnergy += entry.tenelec;
             }
           }
-
-          // Update meter_power capability with yearly total
-          await this.setCapabilityValue('meter_power', totalEnergy).catch(this.error);
-
-          // Create Insights log entry for energy tracking (log is auto-created by Homey)
-          try {
-            await this.homey.insights.createEntry('meter_power', totalEnergy);
-            this.log(`Energy data logged to Insights: ${totalEnergy.toFixed(2)} kWh`);
-          } catch (err) {
-            this.error('Failed to create Insights log entry:', err);
-          }
-
-          this.log(`Energy data updated: ${totalEnergy.toFixed(2)} kWh (${year})`);
-
-          // Reset energy sync failures on success
-          this._energySyncFailures = 0;
-        } else {
-          this.log('No energy data available or unsupported by device');
         }
 
-      } catch (error) {
-        this.error('Failed to sync energy data:', error);
+        // Update meter_power capability with yearly total
+        await this.setCapabilityValue('meter_power', totalEnergy).catch(this.error);
 
-        // Track failures but don't mark device unavailable for energy sync issues
-        this._energySyncFailures = (this._energySyncFailures || 0) + 1;
-
-        // If energy data consistently fails, log it but continue
-        if (this._energySyncFailures >= 3) {
-          this.log('Energy data sync repeatedly failed - device may not support energy monitoring');
+        // Create Insights log entry for energy tracking (log is auto-created by Homey)
+        try {
+          await this.homey.insights.createEntry('meter_power', totalEnergy);
+          this.log(`Energy data logged to Insights: ${totalEnergy.toFixed(2)} kWh`);
+        } catch (err) {
+          this.error('Failed to create Insights log entry:', err);
         }
+
+        this.log(`Energy data updated: ${totalEnergy.toFixed(2)} kWh (${year})`);
+
+        // Reset energy sync failures on success
+        this._energySyncFailures = 0;
+      } else {
+        this.log('No energy data available or unsupported by device');
+      }
+
+    } catch (error) {
+      this.error('Failed to sync energy data:', error);
+
+      // Track failures but don't mark device unavailable for energy sync issues
+      this._energySyncFailures = (this._energySyncFailures || 0) + 1;
+
+      // If energy data consistently fails, log it but continue
+      if (this._energySyncFailures >= 3) {
+        this.log('Energy data sync repeatedly failed - device may not support energy monitoring');
       }
     }
+  }
 
   /**
    * Update device capabilities dynamically based on what params the device reports
    * This allows different AC models to show only the features they support
    */
   async _updateDynamicCapabilities(params) {
-      const reportedParams = Object.keys(params);
+    const reportedParams = Object.keys(params);
 
-      // Check each param -> capability mapping
-      for (const [param, capability] of Object.entries(PARAM_TO_CAPABILITY)) {
-        const deviceSupportsParam = reportedParams.includes(param);
-        const hasCapability = this.hasCapability(capability);
+    // Check each param -> capability mapping
+    for (const [param, capability] of Object.entries(PARAM_TO_CAPABILITY)) {
+      const deviceSupportsParam = reportedParams.includes(param);
+      const hasCapability = this.hasCapability(capability);
 
-        if (deviceSupportsParam && !hasCapability) {
-          // Device supports this param but we don't have the capability - add it
-          this.log(`Adding capability ${capability} (device reports ${param})`);
-          try {
-            await this.addCapability(capability);
-            // Register listener for the new capability if it's not read-only
-            this._registerDynamicCapabilityListener(capability);
-          } catch (error) {
-            this.error(`Failed to add capability ${capability}:`, error);
-          }
-        } else if (!deviceSupportsParam && hasCapability) {
-          // Device doesn't support this param but we have the capability - keep it for now
-          // Note: We don't remove capabilities because the device might just not be 
-          // reporting them in this response. User can manually reset if needed.
-          this.log(`Device does not report ${param}, but capability ${capability} exists`);
+      if (deviceSupportsParam && !hasCapability) {
+        // Device supports this param but we don't have the capability - add it
+        this.log(`Adding capability ${capability} (device reports ${param})`);
+        try {
+          await this.addCapability(capability);
+          // Register listener for the new capability if it's not read-only
+          this._registerDynamicCapabilityListener(capability);
+        } catch (error) {
+          this.error(`Failed to add capability ${capability}:`, error);
         }
+      } else if (!deviceSupportsParam && hasCapability) {
+        // Device doesn't support this param but we have the capability - keep it for now
+        // Note: We don't remove capabilities because the device might just not be 
+        // reporting them in this response. User can manually reset if needed.
+        this.log(`Device does not report ${param}, but capability ${capability} exists`);
       }
     }
+  }
 
-    /**
-     * Register a listener for a dynamically added capability
-     */
-    _registerDynamicCapabilityListener(capability) {
-      const listenerMap = {
-        'airco_vertical': this.onCapabilitySwingVertical,
-        'airco_horizontal': this.onCapabilitySwingHorizontal,
-        'eco_mode': this.onCapabilityEcoMode,
-        'health_mode': this.onCapabilityHealthMode,
-        'fan_speed': this.onCapabilityFanSpeed,
-        'sleep_mode': this.onCapabilitySleepMode,
-        'display_light': this.onCapabilityDisplayLight,
-        'self_cleaning': this.onCapabilitySelfCleaning,
-        'child_lock': this.onCapabilityChildLock,
-        'mildew_proof': this.onCapabilityMildewProof,
-        'comfortable_wind': this.onCapabilityComfortableWind,
-        'auxiliary_heat': this.onCapabilityAuxiliaryHeat,
-        'power_limit': this.onCapabilityPowerLimit,
-        'power_limit_enabled': this.onCapabilityPowerLimitEnabled,
-        'temperature_unit': this.onCapabilityTemperatureUnit
-        // error_status is read-only, no listener needed
-      };
+  /**
+   * Register a listener for a dynamically added capability
+   */
+  _registerDynamicCapabilityListener(capability) {
+    const listenerMap = {
+      'airco_vertical': this.onCapabilitySwingVertical,
+      'airco_horizontal': this.onCapabilitySwingHorizontal,
+      'eco_mode': this.onCapabilityEcoMode,
+      'health_mode': this.onCapabilityHealthMode,
+      'fan_speed': this.onCapabilityFanSpeed,
+      'sleep_mode': this.onCapabilitySleepMode,
+      'display_light': this.onCapabilityDisplayLight,
+      'self_cleaning': this.onCapabilitySelfCleaning,
+      'child_lock': this.onCapabilityChildLock,
+      'mildew_proof': this.onCapabilityMildewProof,
+      'comfortable_wind': this.onCapabilityComfortableWind,
+      'auxiliary_heat': this.onCapabilityAuxiliaryHeat,
+      'power_limit': this.onCapabilityPowerLimit,
+      'power_limit_enabled': this.onCapabilityPowerLimitEnabled,
+      'temperature_unit': this.onCapabilityTemperatureUnit
+      // error_status is read-only, no listener needed
+    };
 
-      const handler = listenerMap[capability];
-      if (handler) {
-        this.registerCapabilityListener(capability, handler.bind(this));
-      }
+    const handler = listenerMap[capability];
+    if (handler) {
+      this.registerCapabilityListener(capability, handler.bind(this));
     }
+  }
 
   /**
    * Handle onoff capability
    */
   async onCapabilityOnoff(value) {
-      this.log('onoff changed to:', value);
+    this.log('onoff changed to:', value);
 
-      try {
-        const params = {
-          pwr: value ? 1 : 0
-        };
+    try {
+      const params = {
+        pwr: value ? 1 : 0
+      };
 
-        const success = await this.api.setDeviceParams(this.deviceInfo, params);
+      const success = await this.api.setDeviceParams(this.deviceInfo, params);
 
-        if (!success) {
-          throw new Error('Failed to set power state');
-        }
-
-        // Update thermostat_mode to reflect power state
-        if (value) {
-          // Power ON - restore last mode or default to auto
-          const modeToSet = this._lastActiveMode || 'auto';
-          await this.setCapabilityValue('thermostat_mode', modeToSet).catch(this.error);
-        } else {
-          // Power OFF - set mode to 'off'
-          await this.setCapabilityValue('thermostat_mode', 'off').catch(this.error);
-        }
-
-        // Wait before syncing to allow device to process command
-        this.homey.setTimeout(() => {
-          this.syncDeviceState().catch(this.error);
-        }, SYNC_DELAY_MS);
-
-        return value;
-      } catch (error) {
-        this.error('Failed to set onoff:', error);
-        throw new Error('Failed to control device');
+      if (!success) {
+        throw new Error('Failed to set power state');
       }
+
+      // Update thermostat_mode to reflect power state
+      if (value) {
+        // Power ON - restore last mode or default to auto
+        const modeToSet = this._lastActiveMode || 'auto';
+        await this.setCapabilityValue('thermostat_mode', modeToSet).catch(this.error);
+      } else {
+        // Power OFF - set mode to 'off'
+        await this.setCapabilityValue('thermostat_mode', 'off').catch(this.error);
+      }
+
+      // Wait before syncing to allow device to process command
+      this.homey.setTimeout(() => {
+        this.syncDeviceState().catch(this.error);
+      }, SYNC_DELAY_MS);
+
+      return value;
+    } catch (error) {
+      this.error('Failed to set onoff:', error);
+      throw new Error('Failed to control device');
     }
+  }
 
   /**
    * Handle target_temperature capability
    */
   async onCapabilityTargetTemperature(value) {
-      this.log('target_temperature changed to:', value);
+    this.log('target_temperature changed to:', value);
 
-      try {
-        // Temperature needs to be sent as value * 10
-        const params = {
-          temp: Math.round(value * 10)
-        };
+    try {
+      // Temperature needs to be sent as value * 10
+      const params = {
+        temp: Math.round(value * 10)
+      };
 
-        const success = await this.api.setDeviceParams(this.deviceInfo, params);
+      const success = await this.api.setDeviceParams(this.deviceInfo, params);
 
-        if (!success) {
-          throw new Error('Failed to set temperature');
-        }
-
-        // Wait before syncing to allow device to process command
-        this.homey.setTimeout(() => {
-          this.syncDeviceState().catch(this.error);
-        }, SYNC_DELAY_MS);
-
-        return value;
-      } catch (error) {
-        this.error('Failed to set target_temperature:', error);
-        throw new Error('Failed to control device');
+      if (!success) {
+        throw new Error('Failed to set temperature');
       }
+
+      // Wait before syncing to allow device to process command
+      this.homey.setTimeout(() => {
+        this.syncDeviceState().catch(this.error);
+      }, SYNC_DELAY_MS);
+
+      return value;
+    } catch (error) {
+      this.error('Failed to set target_temperature:', error);
+      throw new Error('Failed to control device');
     }
+  }
 
   /**
    * Handle thermostat_mode capability
    */
   async onCapabilityThermostatMode(value) {
-      this.log('thermostat_mode changed to:', value);
+    this.log('thermostat_mode changed to:', value);
 
-      try {
-        // Special handling for "off" mode - turn power off
-        if (value === 'off') {
-          this.log('OFF mode selected - turning power off');
-
-          const params = {
-            pwr: 0
-          };
-
-          const success = await this.api.setDeviceParams(this.deviceInfo, params);
-
-          if (!success) {
-            throw new Error('Failed to turn off');
-          }
-
-          // Update onoff capability to reflect power off
-          await this.setCapabilityValue('onoff', false).catch(this.error);
-
-          this.homey.setTimeout(() => {
-            this.syncDeviceState().catch(this.error);
-          }, SYNC_DELAY_MS);
-
-          return value;
-        }
-
-        // For any other mode, make sure power is on and set the mode
-        const auxMode = HOMEY_MODE_TO_AUX[value];
-
-        if (auxMode === undefined) {
-          throw new Error('Invalid mode');
-        }
-
-        // Store the last active mode (so we can restore it when turning on)
-        this._lastActiveMode = value;
+    try {
+      // Special handling for "off" mode - turn power off
+      if (value === 'off') {
+        this.log('OFF mode selected - turning power off');
 
         const params = {
-          pwr: 1,  // Ensure power is on when setting a mode
-          ac_mode: auxMode
+          pwr: 0
         };
 
         const success = await this.api.setDeviceParams(this.deviceInfo, params);
 
         if (!success) {
-          throw new Error('Failed to set mode');
+          throw new Error('Failed to turn off');
         }
 
-        // Update onoff capability to reflect power on
-        await this.setCapabilityValue('onoff', true).catch(this.error);
+        // Update onoff capability to reflect power off
+        await this.setCapabilityValue('onoff', false).catch(this.error);
 
-        // Wait before syncing to allow device to process command
         this.homey.setTimeout(() => {
           this.syncDeviceState().catch(this.error);
         }, SYNC_DELAY_MS);
 
         return value;
-      } catch (error) {
-        this.error('Failed to set thermostat_mode:', error);
-        throw new Error('Failed to control device');
       }
+
+      // For any other mode, make sure power is on and set the mode
+      const auxMode = HOMEY_MODE_TO_AUX[value];
+
+      if (auxMode === undefined) {
+        throw new Error('Invalid mode');
+      }
+
+      // Store the last active mode (so we can restore it when turning on)
+      this._lastActiveMode = value;
+
+      const params = {
+        pwr: 1,  // Ensure power is on when setting a mode
+        ac_mode: auxMode
+      };
+
+      const success = await this.api.setDeviceParams(this.deviceInfo, params);
+
+      if (!success) {
+        throw new Error('Failed to set mode');
+      }
+
+      // Update onoff capability to reflect power on
+      await this.setCapabilityValue('onoff', true).catch(this.error);
+
+      // Wait before syncing to allow device to process command
+      this.homey.setTimeout(() => {
+        this.syncDeviceState().catch(this.error);
+      }, SYNC_DELAY_MS);
+
+      return value;
+    } catch (error) {
+      this.error('Failed to set thermostat_mode:', error);
+      throw new Error('Failed to control device');
     }
+  }
 
   /**
    * Handle fan_speed capability
    */
   async onCapabilityFanSpeed(value) {
-      this.log('fan_speed changed to:', value);
+    this.log('fan_speed changed to:', value);
 
-      try {
-        const auxFan = HOMEY_FAN_TO_AUX[value];
+    try {
+      const auxFan = HOMEY_FAN_TO_AUX[value];
 
-        if (auxFan === undefined) {
-          throw new Error('Invalid fan speed');
-        }
-
-        const params = {
-          ac_mark: auxFan
-        };
-
-        const success = await this.api.setDeviceParams(this.deviceInfo, params);
-
-        if (!success) {
-          throw new Error('Failed to set fan speed');
-        }
-
-        this.homey.setTimeout(() => {
-          this.syncDeviceState().catch(this.error);
-        }, SYNC_DELAY_MS);
-
-        return value;
-      } catch (error) {
-        this.error('Failed to set fan_speed:', error);
-        throw new Error('Failed to control device');
+      if (auxFan === undefined) {
+        throw new Error('Invalid fan speed');
       }
+
+      const params = {
+        ac_mark: auxFan
+      };
+
+      const success = await this.api.setDeviceParams(this.deviceInfo, params);
+
+      if (!success) {
+        throw new Error('Failed to set fan speed');
+      }
+
+      this.homey.setTimeout(() => {
+        this.syncDeviceState().catch(this.error);
+      }, SYNC_DELAY_MS);
+
+      return value;
+    } catch (error) {
+      this.error('Failed to set fan_speed:', error);
+      throw new Error('Failed to control device');
     }
+  }
 
   /**
    * Handle vertical swing capability
    */
   async onCapabilitySwingVertical(value) {
-      this.log('airco_vertical changed to:', value);
+    this.log('airco_vertical changed to:', value);
 
-      try {
-        const auxSwing = HOMEY_SWING_TO_AUX[value];
+    try {
+      const auxSwing = HOMEY_SWING_TO_AUX[value];
 
-        if (auxSwing === undefined) {
-          throw new Error('Invalid swing position');
-        }
-
-        const params = {
-          ac_vdir: auxSwing
-        };
-
-        const success = await this.api.setDeviceParams(this.deviceInfo, params);
-
-        if (!success) {
-          throw new Error('Failed to set swing position');
-        }
-
-        this.homey.setTimeout(() => {
-          this.syncDeviceState().catch(this.error);
-        }, SYNC_DELAY_MS);
-
-        return value;
-      } catch (error) {
-        this.error('Failed to set airco_vertical:', error);
-        throw new Error('Failed to control device');
+      if (auxSwing === undefined) {
+        throw new Error('Invalid swing position');
       }
+
+      const params = {
+        ac_vdir: auxSwing
+      };
+
+      const success = await this.api.setDeviceParams(this.deviceInfo, params);
+
+      if (!success) {
+        throw new Error('Failed to set swing position');
+      }
+
+      this.homey.setTimeout(() => {
+        this.syncDeviceState().catch(this.error);
+      }, SYNC_DELAY_MS);
+
+      return value;
+    } catch (error) {
+      this.error('Failed to set airco_vertical:', error);
+      throw new Error('Failed to control device');
     }
+  }
 
   /**
    * Handle horizontal swing capability
    */
   async onCapabilitySwingHorizontal(value) {
-      this.log('airco_horizontal changed to:', value);
+    this.log('airco_horizontal changed to:', value);
 
-      try {
-        const auxSwing = HOMEY_SWING_TO_AUX[value];
+    try {
+      const auxSwing = HOMEY_SWING_TO_AUX[value];
 
-        if (auxSwing === undefined) {
-          throw new Error('Invalid swing position');
-        }
-
-        const params = {
-          ac_hdir: auxSwing
-        };
-
-        const success = await this.api.setDeviceParams(this.deviceInfo, params);
-
-        if (!success) {
-          throw new Error('Failed to set swing position');
-        }
-
-        this.homey.setTimeout(() => {
-          this.syncDeviceState().catch(this.error);
-        }, SYNC_DELAY_MS);
-
-        return value;
-      } catch (error) {
-        this.error('Failed to set airco_horizontal:', error);
-        throw new Error('Failed to control device');
+      if (auxSwing === undefined) {
+        throw new Error('Invalid swing position');
       }
+
+      const params = {
+        ac_hdir: auxSwing
+      };
+
+      const success = await this.api.setDeviceParams(this.deviceInfo, params);
+
+      if (!success) {
+        throw new Error('Failed to set swing position');
+      }
+
+      this.homey.setTimeout(() => {
+        this.syncDeviceState().catch(this.error);
+      }, SYNC_DELAY_MS);
+
+      return value;
+    } catch (error) {
+      this.error('Failed to set airco_horizontal:', error);
+      throw new Error('Failed to control device');
     }
+  }
 
   /**
    * Handle eco_mode capability
    */
   async onCapabilityEcoMode(value) {
-      return this._setBooleanParam('eco_mode', 'ecomode', value);
-    }
+    return this._setBooleanParam('eco_mode', 'ecomode', value);
+  }
 
   /**
    * Handle health_mode capability
    */
   async onCapabilityHealthMode(value) {
-      return this._setBooleanParam('health_mode', 'ac_health', value);
-    }
+    return this._setBooleanParam('health_mode', 'ac_health', value);
+  }
 
   /**
    * Handle sleep_mode capability
    */
   async onCapabilitySleepMode(value) {
-      return this._setBooleanParam('sleep_mode', 'ac_slp', value);
-    }
+    return this._setBooleanParam('sleep_mode', 'ac_slp', value);
+  }
 
   /**
    * Handle display_light capability
    */
   async onCapabilityDisplayLight(value) {
-      return this._setBooleanParam('display_light', 'scrdisp', value);
-    }
+    return this._setBooleanParam('display_light', 'scrdisp', value);
+  }
 
   /**
    * Handle self_cleaning capability
    */
   async onCapabilitySelfCleaning(value) {
-      return this._setBooleanParam('self_cleaning', 'ac_clean', value);
-    }
+    return this._setBooleanParam('self_cleaning', 'ac_clean', value);
+  }
 
   /**
    * Handle child_lock capability
    */
   async onCapabilityChildLock(value) {
-      return this._setBooleanParam('child_lock', 'childlock', value);
-    }
+    return this._setBooleanParam('child_lock', 'childlock', value);
+  }
 
   /**
    * Handle mildew_proof capability
    */
   async onCapabilityMildewProof(value) {
-      return this._setBooleanParam('mildew_proof', 'mldprf', value);
-    }
+    return this._setBooleanParam('mildew_proof', 'mldprf', value);
+  }
 
   /**
    * Handle comfortable_wind capability
    */
   async onCapabilityComfortableWind(value) {
-      return this._setBooleanParam('comfortable_wind', 'comfwind', value);
-    }
+    return this._setBooleanParam('comfortable_wind', 'comfwind', value);
+  }
 
   /**
    * Handle auxiliary_heat capability
    */
   async onCapabilityAuxiliaryHeat(value) {
-      return this._setBooleanParam('auxiliary_heat', 'ac_astheat', value);
-    }
+    return this._setBooleanParam('auxiliary_heat', 'ac_astheat', value);
+  }
 
   /**
    * Handle power_limit capability
    */
   async onCapabilityPowerLimit(value) {
-      this.log('power_limit changed to:', value);
+    this.log('power_limit changed to:', value);
 
-      try {
-        // Convert string value from picker to number
-        const numValue = parseInt(value, 10);
+    try {
+      // Convert string value from picker to number
+      const numValue = parseInt(value, 10);
 
-        const params = {
-          pwrlimit: numValue
-        };
+      const params = {
+        pwrlimit: numValue
+      };
 
-        const success = await this.api.setDeviceParams(this.deviceInfo, params);
+      const success = await this.api.setDeviceParams(this.deviceInfo, params);
 
-        if (!success) {
-          throw new Error('Failed to set power limit');
-        }
-
-        this.homey.setTimeout(() => {
-          this.syncDeviceState().catch(this.error);
-        }, SYNC_DELAY_MS);
-
-        return value;
-      } catch (error) {
-        this.error('Failed to set power_limit:', error);
-        throw new Error('Failed to control device');
+      if (!success) {
+        throw new Error('Failed to set power limit');
       }
+
+      this.homey.setTimeout(() => {
+        this.syncDeviceState().catch(this.error);
+      }, SYNC_DELAY_MS);
+
+      return value;
+    } catch (error) {
+      this.error('Failed to set power_limit:', error);
+      throw new Error('Failed to control device');
     }
+  }
 
   /**
    * Handle power_limit_enabled capability
    */
   async onCapabilityPowerLimitEnabled(value) {
-      return this._setBooleanParam('power_limit_enabled', 'pwrlimitswitch', value);
-    }
+    return this._setBooleanParam('power_limit_enabled', 'pwrlimitswitch', value);
+  }
 
   /**
    * Handle temperature_unit capability
    */
   async onCapabilityTemperatureUnit(value) {
-      this.log('temperature_unit changed to:', value);
+    this.log('temperature_unit changed to:', value);
 
-      try {
-        // Track when user manually changed this to prevent sync from overwriting
-        this._lastTempUnitChange = Date.now();
+    try {
+      // Track when user manually changed this to prevent sync from overwriting
+      this._lastTempUnitChange = Date.now();
 
-        // 1 = Celsius, 2 = Fahrenheit (NOT 0!)
-        const tempunitValue = value === 'celsius' ? 1 : 2;
-        const params = {
-          tempunit: tempunitValue
-        };
+      // 1 = Celsius, 2 = Fahrenheit (NOT 0!)
+      const tempunitValue = value === 'celsius' ? 1 : 2;
+      const params = {
+        tempunit: tempunitValue
+      };
 
-        this.log(`Setting tempunit API parameter to: ${tempunitValue} (${value})`);
-        const success = await this.api.setDeviceParams(this.deviceInfo, params);
-        this.log(`Temperature unit API call result: ${success ? 'SUCCESS' : 'FAILED'}`);
+      this.log(`Setting tempunit API parameter to: ${tempunitValue} (${value})`);
+      const success = await this.api.setDeviceParams(this.deviceInfo, params);
+      this.log(`Temperature unit API call result: ${success ? 'SUCCESS' : 'FAILED'}`);
 
-        if (!success) {
-          throw new Error('Failed to set temperature unit');
-        }
-
-        this.homey.setTimeout(() => {
-          this.syncDeviceState().catch(this.error);
-        }, SYNC_DELAY_MS);
-
-        return value;
-      } catch (error) {
-        this.error('Failed to set temperature_unit:', error);
-        throw new Error('Failed to control device');
+      if (!success) {
+        throw new Error('Failed to set temperature unit');
       }
+
+      this.homey.setTimeout(() => {
+        this.syncDeviceState().catch(this.error);
+      }, SYNC_DELAY_MS);
+
+      return value;
+    } catch (error) {
+      this.error('Failed to set temperature_unit:', error);
+      throw new Error('Failed to control device');
     }
+  }
 
   /**
    * Helper to set boolean parameters
    */
   async _setBooleanParam(capabilityName, paramName, value) {
-      this.log(`${capabilityName} changed to:`, value);
+    this.log(`${capabilityName} changed to:`, value);
 
-      try {
-        const params = {
-          [paramName]: value ? 1 : 0
-        };
+    try {
+      const params = {
+        [paramName]: value ? 1 : 0
+      };
 
-        const success = await this.api.setDeviceParams(this.deviceInfo, params);
+      const success = await this.api.setDeviceParams(this.deviceInfo, params);
 
-        if (!success) {
-          throw new Error(`Failed to set ${capabilityName}`);
-        }
-
-        this.homey.setTimeout(() => {
-          this.syncDeviceState().catch(this.error);
-        }, SYNC_DELAY_MS);
-
-        return value;
-      } catch (error) {
-        this.error(`Failed to set ${capabilityName}:`, error);
-        throw new Error('Failed to control device');
+      if (!success) {
+        throw new Error(`Failed to set ${capabilityName}`);
       }
-    }
 
+      this.homey.setTimeout(() => {
+        this.syncDeviceState().catch(this.error);
+      }, SYNC_DELAY_MS);
+
+      return value;
+    } catch (error) {
+      this.error(`Failed to set ${capabilityName}:`, error);
+      throw new Error('Failed to control device');
+    }
   }
+
+}
 
 module.exports = AuxACDevice;
