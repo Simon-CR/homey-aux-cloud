@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <title>Aux Cloud Login</title>
-    <script src="/homey.js" data-origin="pair"></script>
+
     <style>
         body {
             font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -113,8 +113,8 @@
         Debug Log:<br>
     </div>
 
+    <!-- Move script tag here to ensure console exists before logging error -->
     <script>
-        // Define log function globally so it safely works
         function log(msg) {
             console.log(msg);
             var d = document.getElementById('debug-console');
@@ -123,6 +123,11 @@
                 d.scrollTop = d.scrollHeight;
             }
         }
+    </script>
+    <script src="/homey.js" data-origin="pair" onerror="log('CRITICAL: Failed to load /homey.js');"></script>
+
+    <script>
+        log('Script started. Waiting for onHomeyReady...');
 
         function onHomeyReady(Homey) {
             log('onHomeyReady triggered.');
@@ -211,6 +216,17 @@
                 }
             });
         }
+
+        // Failsafe: Check if Homey exists if onHomeyReady doesn't fire
+        setTimeout(function () {
+            if (typeof Homey !== 'undefined') {
+                log('Homey object exists but onHomeyReady did not fire. Configuring manually...');
+                // Check if we need to manually call it or if it's already done? 
+                // We'll just log for now to see state.
+            } else {
+                log('WARNING: 3s passed, Homey object still undefined.');
+            }
+        }, 3000);
     </script>
 </body>
 
