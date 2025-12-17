@@ -25,21 +25,28 @@ class AuxACDriver extends Homey.Driver {
 
     // Handle login credentials
     session.setHandler('login', async (data) => {
+      this.log('Login handler triggered', JSON.stringify(data));
       try {
         email = data.username;
         password = data.password;
         if (data.region) {
-            region = data.region;
+          region = data.region;
         }
-        
+
+        this.log(`Attempting login for user: ${email} in region: ${region}`);
+
         // Initialize API with selected region
         api = new AuxCloudAPI(region);
+        this.log('API initialized, calling basicLogin...');
+
         await api.login(email, password);
-        
+        this.log('Login successful');
+
         return true;
       } catch (error) {
         this.error('Login failed:', error);
-        throw new Error(this.homey.__('pair.login.error'));
+        this.log('Login failed stack:', error.stack);
+        throw new Error(this.homey.__('pair.login.error') + ': ' + error.message);
       }
     });
 
@@ -52,25 +59,25 @@ class AuxACDriver extends Homey.Driver {
 
         // Get families
         const families = await api.getFamilies();
-        
+
         devices = [];
         skippedDevices = [];
-        
+
         // Get devices from all families
         for (const family of families) {
           const familyDevices = await api.getDevices(family.familyid);
-          
+
           this.log(`Found ${familyDevices.length} devices in family ${family.familyid}`);
-          
+
           // Filter for supported HVAC devices (AC and Heat Pumps)
           for (const device of familyDevices) {
             this.log(`Checking device: ${device.name || device.friendlyName} (productId: ${device.productId})`);
-            
+
             // Check if it's a supported HVAC device
             if (isSupportedDevice(device.productId)) {
               const deviceType = getDeviceTypeName(device.productId);
               this.log(`✓ Adding supported device: ${device.name || device.friendlyName} (${deviceType})`);
-              
+
               devices.push({
                 name: device.name || device.friendlyName || `AUX ${deviceType} ${device.endpointId.slice(-6)}`,
                 data: {
@@ -99,7 +106,7 @@ class AuxACDriver extends Homey.Driver {
             }
           }
         }
-        
+
         // Log summary
         this.log(`Device discovery complete: ${devices.length} supported, ${skippedDevices.length} unsupported`);
         if (skippedDevices.length > 0) {

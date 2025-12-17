@@ -107,31 +107,47 @@
 
     <button id="login-btn" data-i18n="pair.login.button">Log In</button>
 
+    <div id="debug-console"
+        style="margin-top: 20px; padding: 10px; background: #f0f0f0; border: 1px solid #ccc; font-family: monospace; font-size: 10px; max-height: 100px; overflow-y: auto; display: block;">
+        Debug Log:<br>
+    </div>
+
     <script>
-        function onHomeyReady(Homey) {
+        function log(msg) {
+            console.log(msg);
+            var d = document.getElementById('debug-console');
+            if (d) {
+                d.innerHTML += msg + '<br>';
+                d.scrollTop = d.scrollHeight;
+            }
+        }
+
+        log('Script started.');
+
+        try {
             Homey.setTitle('Login to AUX Cloud');
+            log('Set title called.');
+        } catch (e) {
+            log('Error setting title: ' + e);
+        }
 
-            var btn = document.getElementById('login-btn');
-            var errorEl = document.getElementById('error-msg');
-            var usernameInput = document.getElementById('username');
-            var passwordInput = document.getElementById('password');
-            var regionInput = document.getElementById('region');
+        var btn = document.getElementById('login-btn');
+        var errorEl = document.getElementById('error-msg');
+        var usernameInput = document.getElementById('username');
+        var passwordInput = document.getElementById('password');
+        var regionInput = document.getElementById('region');
 
-            // Restore values if available
-            Homey.getOptions(function (err, options) {
-                if (options) {
-                    if (options.username && usernameInput) usernameInput.value = options.username;
-                    if (options.region && regionInput) regionInput.value = options.region;
-                }
-            });
-
-            if (btn) {
-                btn.addEventListener('click', function () {
-                    console.log('Login button clicked');
+        if (btn) {
+            log('Login button found.');
+            btn.addEventListener('click', function () {
+                try {
+                    log('Button clicked.');
 
                     var username = usernameInput ? usernameInput.value.trim() : '';
                     var password = passwordInput ? passwordInput.value : '';
                     var region = regionInput ? regionInput.value : 'eu';
+
+                    log('Values: ' + region + ', User len: ' + username.length);
 
                     if (errorEl) {
                         errorEl.style.display = 'none';
@@ -139,6 +155,7 @@
                     }
 
                     if (!username || !password) {
+                        log('Validation failed: Missing username or password');
                         if (errorEl) {
                             errorEl.innerText = 'Please enter both email and password';
                             errorEl.style.display = 'block';
@@ -148,34 +165,48 @@
 
                     btn.disabled = true;
                     btn.innerText = 'Logging in...';
+                    log('Emitting login event...');
 
                     Homey.emit('login', {
                         username: username,
                         password: password,
                         region: region
                     }, function (err, result) {
+                        log('Emit callback received.');
                         if (btn) {
                             btn.disabled = false;
                             btn.innerText = 'Log In';
                         }
 
                         if (err) {
+                            log('Error: ' + JSON.stringify(err));
                             console.error('Login error:', err);
                             if (errorEl) {
                                 errorEl.innerText = err.message || err.toString() || 'Login failed';
                                 errorEl.style.display = 'block';
                             }
                         } else {
+                            log('Success! Moving to next view.');
                             // Success, move to next view
-                            console.log('Login successful');
                             Homey.nextView();
                         }
                     });
-                });
-            } else {
-                console.error('Login button not found');
-            }
+                } catch (e) {
+                    log('Exception in click handler: ' + e);
+                }
+            });
+        } else {
+            log('CRITICAL: Login button NOT found in DOM.');
         }
+
+        // Restore values if available
+        Homey.getOptions(function (err, options) {
+            log('getOptions called. Err: ' + err);
+            if (options) {
+                if (options.username && usernameInput) usernameInput.value = options.username;
+                if (options.region && regionInput) regionInput.value = options.region;
+            }
+        });
     </script>
 </body>
 
