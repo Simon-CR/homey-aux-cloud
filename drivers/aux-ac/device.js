@@ -485,8 +485,17 @@ class AuxACDevice extends Homey.Device {
 
       if (params.ac_mode !== undefined) {
         const homeyMode = AUX_MODE_TO_HOMEY[params.ac_mode];
-        if (homeyMode) {
-          await this.setCapabilityValue('thermostat_mode', homeyMode).catch(this.error);
+        const validModes = ['auto', 'cool', 'heat', 'dry', 'fan_only'];
+        if (homeyMode !== undefined && validModes.includes(homeyMode)) {
+          try {
+            await this.setCapabilityValue('thermostat_mode', homeyMode);
+          } catch (err) {
+            this.error(`Failed to set thermostat_mode to ${homeyMode}:`, err);
+            await this.setCapabilityValue('thermostat_mode', 'auto').catch(this.error);
+          }
+        } else {
+          this.log(`Unknown thermostat mode value: ${params.ac_mode}, defaulting to 'auto'`);
+          await this.setCapabilityValue('thermostat_mode', 'auto').catch(this.error);
         }
       }
 
