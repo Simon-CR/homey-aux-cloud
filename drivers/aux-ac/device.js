@@ -494,22 +494,17 @@ class AuxACDevice extends Homey.Device {
         await this.setCapabilityValue('target_temperature', targetTemp).catch(this.error);
       }
 
-      if (params.envtemp !== undefined) {
-        // Environment temperature
+      // Log ALL cloud params for debugging
+      this.log('ALL Cloud params:', JSON.stringify(params));
+
+      // Update current temperature (environment/ambient temperature)
+      if (params.envtemp !== undefined && this.hasCapability('measure_temperature')) {
+        // Temperature is stored as envtemp * 10 (e.g., 241 = 24.1°C)
         const currentTemp = params.envtemp / 10;
-        this.log(`Setting current temperature: ${currentTemp}°C (envtemp=${params.envtemp})`);
+        this.log(`Current (ambient) temperature: ${currentTemp}°C (envtemp=${params.envtemp})`);
         await this.setCapabilityValue('measure_temperature', currentTemp).catch(this.error);
-      } else {
-        // Device doesn't report current temperature - remove capability
-        if (this.hasCapability('measure_temperature')) {
-          this.log('Device does not support envtemp - removing measure_temperature capability');
-          try {
-            await this.removeCapability('measure_temperature');
-          } catch (err) {
-            // Capability might already be removed, ignore error
-            this.log('Could not remove measure_temperature capability:', err.message);
-          }
-        }
+      } else if (!params.hasOwnProperty('envtemp')) {
+        this.log('Cloud does not report envtemp parameter');
       }
 
       if (params.ac_mode !== undefined) {
