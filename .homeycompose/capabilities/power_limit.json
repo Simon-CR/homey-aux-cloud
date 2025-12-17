@@ -10,6 +10,7 @@
   "min": 0,
   "max": 90,
   "step": 10,
+  "decimals": 0,
   "units": {
     "en": "%"
   },
