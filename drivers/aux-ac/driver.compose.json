@@ -146,13 +146,6 @@
       "id": "list_devices",
       "template": "list_devices",
       "navigation": {
-        "next": "setup_info"
-      }
-    },
-    {
-      "id": "setup_info",
-      "file": "/drivers/aux-ac/pair/setup_info.html",
-      "navigation": {
         "next": "add_devices"
       }
     },
