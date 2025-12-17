@@ -262,64 +262,42 @@ class AuxACDevice extends Homey.Device {
   /**
    * Detect if the device supports fixed swing positions (2-6) or only on/off (0/1).
    * Some AC units support setting specific vane positions, while others only support
-   * continuous swing mode. This detection tests by:
-   * 1. If current value is already 2-6, positions are supported
-   * 2. Otherwise, try setting position 2, check if it sticks, then restore original value
+   * continuous swing mode. This detection is passive - it only checks the current value
+   * without changing any settings.
    */
   async _detectSwingPositionSupport() {
     try {
-      this.log('Detecting swing position support...');
+      this.log('Detecting swing position support (passive check)...');
 
-      // Get current swing values (use empty array to get all params since specific queries may not work)
+      // Get current swing values without changing anything
       const params = await this.api.getDeviceParams(this.deviceInfo, []);
-      const originalVdir = params.ac_vdir;
-      const originalHdir = params.ac_hdir;
+      const currentVdir = params.ac_vdir;
+      const currentHdir = params.ac_hdir;
 
-      this.log(`Current swing values: vertical=${originalVdir}, horizontal=${originalHdir}`);
+      this.log(`Current swing values: vertical=${currentVdir}, horizontal=${currentHdir}`);
 
       // Check vertical swing position support
+      // If current value is 2-6, positions are supported
+      // If it's 0 or 1, we assume only on/off is supported (safer than testing)
       let supportsVertical = false;
-      if (originalVdir >= 2 && originalVdir <= 6) {
-        // Already at a position, so positions are supported
+      if (currentVdir >= 2 && currentVdir <= 6) {
         supportsVertical = true;
-        this.log('Vertical positions supported (current value is a position)');
-      } else if (originalVdir !== undefined) {
-        // Try setting to position 2 and see if it sticks
-        await this.api.setDeviceParams(this.deviceInfo, { ac_vdir: 2 });
-        await new Promise(r => this.homey.setTimeout(r, 3000));
-
-        const testParams = await this.api.getDeviceParams(this.deviceInfo, []);
-        if (testParams.ac_vdir === 2) {
-          supportsVertical = true;
-          this.log('Vertical positions supported (test position accepted)');
-        } else {
-          this.log('Vertical positions NOT supported (test position rejected)');
-        }
-
-        // Restore original value
-        await this.api.setDeviceParams(this.deviceInfo, { ac_vdir: originalVdir });
+        this.log('Vertical positions supported (current value indicates position support)');
+      } else {
+        this.log('Vertical positions: Unknown or only on/off (will show all options by default)');
+        // Default to true to show all options - user can use what works
+        supportsVertical = true;
       }
 
       // Check horizontal swing position support
       let supportsHorizontal = false;
-      if (originalHdir >= 2 && originalHdir <= 6) {
+      if (currentHdir >= 2 && currentHdir <= 6) {
         supportsHorizontal = true;
-        this.log('Horizontal positions supported (current value is a position)');
-      } else if (originalHdir !== undefined) {
-        // Try setting to position 2 and see if it sticks
-        await this.api.setDeviceParams(this.deviceInfo, { ac_hdir: 2 });
-        await new Promise(r => this.homey.setTimeout(r, 3000));
-
-        const testParams2 = await this.api.getDeviceParams(this.deviceInfo, []);
-        if (testParams2.ac_hdir === 2) {
-          supportsHorizontal = true;
-          this.log('Horizontal positions supported (test position accepted)');
-        } else {
-          this.log('Horizontal positions NOT supported (test position rejected)');
-        }
-
-        // Restore original value
-        await this.api.setDeviceParams(this.deviceInfo, { ac_hdir: originalHdir });
+        this.log('Horizontal positions supported (current value indicates position support)');
+      } else {
+        this.log('Horizontal positions: Unknown or only on/off (will show all options by default)');
+        // Default to true to show all options - user can use what works
+        supportsHorizontal = true;
       }
 
       // Store the results for future use
@@ -336,6 +314,9 @@ class AuxACDevice extends Homey.Device {
 
     } catch (error) {
       this.error('Failed to detect swing position support:', error);
+      // On error, default to showing all options
+      this.supportsVerticalPositions = true;
+      this.supportsHorizontalPositions = true;
     }
   }
 
