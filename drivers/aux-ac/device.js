@@ -601,19 +601,28 @@ class AuxACDevice extends Homey.Device {
       }
 
       // Update temperature unit - with validation
+      // Update temperature unit (but skip if user recently changed it manually)
       if (params.tempunit !== undefined && this.hasCapability('temperature_unit')) {
-        const unit = params.tempunit === 1 ? 'celsius' : 'fahrenheit';
-        const validUnits = ['celsius', 'fahrenheit'];
-        if (validUnits.includes(unit)) {
-          try {
-            await this.setCapabilityValue('temperature_unit', unit);
-          } catch (err) {
-            this.error(`Failed to set temperature_unit to ${unit}:`, err);
+        // Skip sync if user changed it in the last 60 seconds
+        const now = Date.now();
+        const timeSinceUserChange = this._lastTempUnitChange ? (now - this._lastTempUnitChange) : Infinity;
+
+        if (timeSinceUserChange < 60000) {
+          this.log(`Skipping tempunit sync (user changed it ${Math.round(timeSinceUserChange / 1000)}s ago)`);
+        } else {
+          const unit = params.tempunit === 1 ? 'celsius' : 'fahrenheit';
+          const validUnits = ['celsius', 'fahrenheit'];
+          if (validUnits.includes(unit)) {
+            try {
+              await this.setCapabilityValue('temperature_unit', unit);
+            } catch (err) {
+              this.error(`Failed to set temperature_unit to ${unit}:`, err);
+              await this.setCapabilityValue('temperature_unit', 'celsius').catch(this.error);
+            }
+          } else {
+            this.log(`Unknown temperature unit: ${params.tempunit}, defaulting to celsius`);
             await this.setCapabilityValue('temperature_unit', 'celsius').catch(this.error);
           }
-        } else {
-          this.log(`Unknown temperature unit: ${params.tempunit}, defaulting to celsius`);
-          await this.setCapabilityValue('temperature_unit', 'celsius').catch(this.error);
         }
       }
 
@@ -1063,6 +1072,9 @@ class AuxACDevice extends Homey.Device {
     this.log('temperature_unit changed to:', value);
 
     try {
+      // Track when user manually changed this to prevent sync from overwriting
+      this._lastTempUnitChange = Date.now();
+
       // 1 = Celsius, 0 = Fahrenheit
       const params = {
         tempunit: value === 'celsius' ? 1 : 0
