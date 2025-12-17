@@ -14,6 +14,7 @@ REFERENCES.md
 memory-bank/
 test-*.js
 debug-*.js
+*.apk
 *.test.js
 .homeybuild/
 jadx_output/
