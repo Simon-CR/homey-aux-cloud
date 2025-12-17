@@ -172,6 +172,25 @@ class AuxACDevice extends Homey.Device {
       values: ['auto', 'cool', 'heat', 'dry', 'fan_only']
     }).catch(this.error);
 
+    // CRITICAL: Set initial safe values for ALL picker capabilities BEFORE sync
+    // This prevents React UI from crashing when it loads before sync completes
+    // The sync will then update these to actual values
+    if (this.hasCapability('thermostat_mode')) {
+      await this.setCapabilityValue('thermostat_mode', 'auto').catch(this.error);
+    }
+    if (this.hasCapability('fan_speed')) {
+      await this.setCapabilityValue('fan_speed', 'auto').catch(this.error);
+    }
+    if (this.hasCapability('airco_vertical')) {
+      await this.setCapabilityValue('airco_vertical', 'off').catch(this.error);
+    }
+    if (this.hasCapability('airco_horizontal')) {
+      await this.setCapabilityValue('airco_horizontal', 'off').catch(this.error);
+    }
+    if (this.hasCapability('temperature_unit')) {
+      await this.setCapabilityValue('temperature_unit', 'celsius').catch(this.error);
+    }
+
     // Start polling for state updates
     // Use this.homey.setInterval for automatic cleanup on Homey Cloud
     this.pollInterval = this.homey.setInterval(() => {
