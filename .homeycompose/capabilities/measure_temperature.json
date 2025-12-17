@@ -1,0 +1,15 @@
+{
+    "type": "number",
+    "title": {
+        "en": "Ambient Temperature"
+    },
+    "units": {
+        "en": "°C"
+    },
+    "uiComponent": null,
+    "getable": true,
+    "setable": false,
+    "desc": {
+        "en": "Current room temperature"
+    }
+}

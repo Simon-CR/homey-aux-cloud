@@ -88,7 +88,8 @@ const PARAM_TO_CAPABILITY = {
   'pwrlimit': 'power_limit',
   'pwrlimitswitch': 'power_limit_enabled',
   'tempunit': 'temperature_unit',
-  'err_flag': 'error_status'
+  'err_flag': 'error_status',
+  'envtemp': 'measure_temperature'
 };
 
 // Core capabilities that all AC devices should have

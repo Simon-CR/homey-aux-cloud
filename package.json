@@ -1,6 +1,6 @@
 {
   "name": "com.aux.cloud",
-  "version": "1.0.0",
+  "version": "1.0.28",
   "description": "Control AUX Cloud-connected mini-split air conditioners and heat pumps",
   "main": "app.js",
   "dependencies": {

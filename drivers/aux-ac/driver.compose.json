@@ -137,6 +137,29 @@
     "large": "/drivers/aux-ac/assets/images/large.png",
     "xlarge": "/drivers/aux-ac/assets/images/xlarge.png"
   },
+  "mobile": {
+    "components": [
+      {
+        "id": "icon",
+        "capabilities": []
+      },
+      {
+        "id": "thermostat",
+        "capabilities": [
+          "target_temperature",
+          "measure_temperature",
+          "thermostat_mode"
+        ]
+      },
+      {
+        "id": "sensor",
+        "capabilities": [
+          "meter_power",
+          "error_status"
+        ]
+      }
+    ]
+  },
   "pair": [
     {
       "id": "login_credentials",
