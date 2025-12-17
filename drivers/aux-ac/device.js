@@ -486,7 +486,10 @@ class AuxACDevice extends Homey.Device {
       if (params.envtemp !== undefined) {
         // Environment temperature
         const currentTemp = params.envtemp / 10;
+        this.log(`Setting current temperature: ${currentTemp}°C (envtemp=${params.envtemp})`);
         await this.setCapabilityValue('measure_temperature', currentTemp).catch(this.error);
+      } else {
+        this.log('envtemp not reported by cloud - current temperature unavailable');
       }
 
       if (params.ac_mode !== undefined) {
