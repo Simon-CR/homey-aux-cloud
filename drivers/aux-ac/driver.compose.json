@@ -139,13 +139,6 @@
   },
   "pair": [
     {
-      "id": "select_region",
-      "file": "/drivers/aux-ac/pair/select_region.html",
-      "navigation": {
-        "next": "login_credentials"
-      }
-    },
-    {
       "id": "login_credentials",
       "template": "login_credentials"
     },

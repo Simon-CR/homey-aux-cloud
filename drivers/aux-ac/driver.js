@@ -18,17 +18,10 @@ class AuxACDriver extends Homey.Driver {
   async onPair(session) {
     let email;
     let password;
-    let region = 'eu'; // Default region
+    let region = 'usa'; // Default to USA region
     let api;
     let devices = [];
     let skippedDevices = []; // Track unsupported devices for user feedback
-
-    // Handle region selection from custom view
-    session.setHandler('region_selected', async (data) => {
-      this.log('Region selected:', data.region);
-      region = data.region;
-      return true;
-    });
 
     // Handle login credentials
     session.setHandler('login', async (data) => {
@@ -42,7 +35,7 @@ class AuxACDriver extends Homey.Driver {
 
         // Initialize API with selected region
         api = new AuxCloudAPI(region);
-        this.log('API initialized, calling basicLogin...');
+        this.log('API initialized, calling login...');
 
         await api.login(email, password);
         this.log('Login successful');
