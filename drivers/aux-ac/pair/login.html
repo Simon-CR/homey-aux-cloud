@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Aux Cloud Login</title>
+    <script src="/homey.js" data-origin="pair"></script>
+    <style>
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            padding: 16px;
+            margin: 0;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #00A9E0;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        button:active {
+            opacity: 0.9;
+        }
+        .logo {
+            display: block;
+            margin: 0 auto 20px auto;
+            width: 80px;
+            height: 80px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .error {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <img class="logo" src="../assets/icon.svg" alt="Logo">
+    
+    <div class="header">
+        <h2 data-i18n="pair.login.title">Login to AUX Cloud</h2>
+        <p data-i18n="pair.login.subtitle">Please enter your credentials</p>
+    </div>
+
+    <div class="form-group">
+        <label for="username" data-i18n="pair.login.username">Email</label>
+        <input type="email" id="username" placeholder="name@example.com" />
+    </div>
+
+    <div class="form-group">
+        <label for="password" data-i18n="pair.login.password">Password</label>
+        <input type="password" id="password" placeholder="Password" />
+    </div>
+
+    <div class="form-group">
+        <label for="region" data-i18n="pair.login.region">Region</label>
+        <select id="region">
+            <option value="eu">Europe</option>
+            <option value="usa">United States</option>
+            <option value="china">China</option>
+        </select>
+    </div>
+
+    <p id="error-msg" class="error"></p>
+
+    <button id="login-btn" data-i18n="pair.login.button">Log In</button>
+
+    <script>
+        Homey.setTitle('Login to AUX Cloud');
+
+        // Restore values if available
+        Homey.getOptions(function(err, options){
+            if(options) {
+                if(options.username) document.getElementById('username').value = options.username;
+                if(options.region) document.getElementById('region').value = options.region;
+            }
+        });
+
+        document.getElementById('login-btn').addEventListener('click', function() {
+            var username = document.getElementById('username').value.trim();
+            var password = document.getElementById('password').value;
+            var region = document.getElementById('region').value;
+            var errorEl = document.getElementById('error-msg');
+            var btn = document.getElementById('login-btn');
+
+            errorEl.style.display = 'none';
+            errorEl.innerText = '';
+
+            if(!username || !password) {
+                errorEl.innerText = 'Please enter both email and password';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = 'Logging in...';
+
+            Homey.emit('login', {
+                username: username,
+                password: password,
+                region: region
+            }, function(err, result) {
+                btn.disabled = false;
+                btn.innerText = 'Log In';
+                
+                if(err) {
+                    console.error(err);
+                    errorEl.innerText = err.message || err.toString() || 'Login failed';
+                    errorEl.style.display = 'block';
+                } else {
+                    // Success, move to next view
+                    Homey.nextView();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

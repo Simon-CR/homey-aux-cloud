@@ -28,8 +28,11 @@ class AuxACDriver extends Homey.Driver {
       try {
         email = data.username;
         password = data.password;
+        if (data.region) {
+            region = data.region;
+        }
         
-        // Try to login with EU region first
+        // Initialize API with selected region
         api = new AuxCloudAPI(region);
         await api.login(email, password);
         
