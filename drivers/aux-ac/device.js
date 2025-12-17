@@ -165,9 +165,10 @@ class AuxACDevice extends Homey.Device {
     this._registerOptionalCapabilityListener('temperature_unit', this.onCapabilityTemperatureUnit.bind(this));
     // Note: error_status is read-only, no listener needed
 
-    // Set available thermostat modes with proper object format
+    // Set available thermostat modes with proper object format (including OFF)
     await this.setCapabilityOptions('thermostat_mode', {
       values: [
+        { id: 'off', title: { en: 'Off' } },
         { id: 'auto', title: { en: 'Auto' } },
         { id: 'cool', title: { en: 'Cool' } },
         { id: 'heat', title: { en: 'Heat' } },
@@ -493,18 +494,27 @@ class AuxACDevice extends Homey.Device {
       }
 
       if (params.ac_mode !== undefined) {
-        const homeyMode = AUX_MODE_TO_HOMEY[params.ac_mode];
-        const validModes = ['auto', 'cool', 'heat', 'dry', 'fan_only'];
-        if (homeyMode !== undefined && validModes.includes(homeyMode)) {
-          try {
-            await this.setCapabilityValue('thermostat_mode', homeyMode);
-          } catch (err) {
-            this.error(`Failed to set thermostat_mode to ${homeyMode}:`, err);
+        // Check power state - if off, set mode to 'off'
+        if (params.pwr === 0) {
+          await this.setCapabilityValue('thermostat_mode', 'off').catch(this.error);
+        } else {
+          // Power is on, set the actual mode
+          const homeyMode = AUX_MODE_TO_HOMEY[params.ac_mode];
+          const validModes = ['auto', 'cool', 'heat', 'dry', 'fan_only'];
+          if (homeyMode !== undefined && validModes.includes(homeyMode)) {
+            // Store as last active mode
+            this._lastActiveMode = homeyMode;
+            try {
+              await this.setCapabilityValue('thermostat_mode', homeyMode);
+            } catch (err) {
+              this.error(`Failed to set thermostat_mode to ${homeyMode}:`, err);
+              await this.setCapabilityValue('thermostat_mode', 'auto').catch(this.error);
+            }
+          } else {
+            this.log(`Unknown thermostat mode value: ${params.ac_mode}, defaulting to 'auto'`);
+            this._lastActiveMode = 'auto';
             await this.setCapabilityValue('thermostat_mode', 'auto').catch(this.error);
           }
-        } else {
-          this.log(`Unknown thermostat mode value: ${params.ac_mode}, defaulting to 'auto'`);
-          await this.setCapabilityValue('thermostat_mode', 'auto').catch(this.error);
         }
       }
 
@@ -814,6 +824,16 @@ class AuxACDevice extends Homey.Device {
         throw new Error('Failed to set power state');
       }
 
+      // Update thermostat_mode to reflect power state
+      if (value) {
+        // Power ON - restore last mode or default to auto
+        const modeToSet = this._lastActiveMode || 'auto';
+        await this.setCapabilityValue('thermostat_mode', modeToSet).catch(this.error);
+      } else {
+        // Power OFF - set mode to 'off'
+        await this.setCapabilityValue('thermostat_mode', 'off').catch(this.error);
+      }
+
       // Wait before syncing to allow device to process command
       this.homey.setTimeout(() => {
         this.syncDeviceState().catch(this.error);
@@ -863,13 +883,42 @@ class AuxACDevice extends Homey.Device {
     this.log('thermostat_mode changed to:', value);
 
     try {
+      // Special handling for "off" mode - turn power off
+      if (value === 'off') {
+        this.log('OFF mode selected - turning power off');
+
+        const params = {
+          pwr: 0
+        };
+
+        const success = await this.api.setDeviceParams(this.deviceInfo, params);
+
+        if (!success) {
+          throw new Error('Failed to turn off');
+        }
+
+        // Update onoff capability to reflect power off
+        await this.setCapabilityValue('onoff', false).catch(this.error);
+
+        this.homey.setTimeout(() => {
+          this.syncDeviceState().catch(this.error);
+        }, SYNC_DELAY_MS);
+
+        return value;
+      }
+
+      // For any other mode, make sure power is on and set the mode
       const auxMode = HOMEY_MODE_TO_AUX[value];
 
       if (auxMode === undefined) {
         throw new Error('Invalid mode');
       }
 
+      // Store the last active mode (so we can restore it when turning on)
+      this._lastActiveMode = value;
+
       const params = {
+        pwr: 1,  // Ensure power is on when setting a mode
         ac_mode: auxMode
       };
 
@@ -878,6 +927,9 @@ class AuxACDevice extends Homey.Device {
       if (!success) {
         throw new Error('Failed to set mode');
       }
+
+      // Update onoff capability to reflect power on
+      await this.setCapabilityValue('onoff', true).catch(this.error);
 
       // Wait before syncing to allow device to process command
       this.homey.setTimeout(() => {
