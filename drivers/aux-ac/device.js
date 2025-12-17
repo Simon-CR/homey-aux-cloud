@@ -596,11 +596,31 @@ class AuxACDevice extends Homey.Device {
 
       // Update power limit capabilities
       if (params.pwrlimit !== undefined && this.hasCapability('power_limit')) {
+        this.log(`Cloud reports pwrlimit: ${params.pwrlimit}`);
         await this.setCapabilityValue('power_limit', params.pwrlimit).catch(this.error);
       }
 
       if (params.pwrlimitswitch !== undefined && this.hasCapability('power_limit_enabled')) {
         await this.setCapabilityValue('power_limit_enabled', params.pwrlimitswitch === 1).catch(this.error);
+      }
+
+      // Remove error_status capability if device doesn't support it
+      if (!params.hasOwnProperty('err_flag')) {
+        if (this.hasCapability('error_status')) {
+          this.log('Device does not support err_flag - removing error_status capability');
+          try {
+            await this.removeCapability('error_status');
+          } catch (err) {
+            // Capability might already be removed, ignore error
+            this.log('Could not remove error_status capability:', err.message);
+          }
+        }
+      } else {
+        // Update error status (read-only diagnostic)
+        if (this.hasCapability('error_status')) {
+          const errorMsg = params.err_flag === 0 ? 'No error' : `Error: ${params.err_flag}`;
+          await this.setCapabilityValue('error_status', errorMsg).catch(this.error);
+        }
       }
 
       // Update temperature unit - with validation
