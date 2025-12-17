@@ -13,5 +13,8 @@
   },
   "1.0.4": {
     "en": "Fix Region"
+  },
+  "1.0.5": {
+    "en": "more auth fixes"
   }
 }
