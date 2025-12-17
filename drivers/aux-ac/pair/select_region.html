@@ -20,11 +20,31 @@
             font-size: 16px;
             border: 1px solid #ddd;
             border-radius: 4px;
+            display: block;
         }
 
         .info {
             color: #666;
             margin: 20px 0;
+        }
+
+        button {
+            width: 100%;
+            max-width: 300px;
+            padding: 12px;
+            margin: 20px auto;
+            background-color: #00A9E0;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            display: block;
+        }
+
+        button:hover {
+            background-color: #0088B8;
         }
     </style>
 </head>
@@ -39,29 +59,28 @@
         <option value="china">China</option>
     </select>
 
+    <button id="continue-btn">Continue</button>
+
     <script>
         function onHomeyReady(Homey) {
             Homey.setTitle('Select Region');
-
+            
             var regionSelect = document.getElementById('region');
-
-            // Auto-advance when selection changes
-            regionSelect.addEventListener('change', function () {
-                var selectedRegion = regionSelect.value;
-
-                // Emit the region to the driver
-                Homey.emit('region_selected', { region: selectedRegion }, function (err) {
-                    if (!err) {
-                        Homey.nextView();
-                    }
+            var continueBtn = document.getElementById('continue-btn');
+            
+            // Handle continue button click
+            if (continueBtn) {
+                continueBtn.addEventListener('click', function() {
+                    var selectedRegion = regionSelect ? regionSelect.value : 'eu';
+                    
+                    // Emit the region to the driver
+                    Homey.emit('region_selected', { region: selectedRegion }, function(err) {
+                        if (!err) {
+                            Homey.nextView();
+                        }
+                    });
                 });
-            });
-
-            // Also allow manual continue if needed
-            Homey.on('continue', function (callback) {
-                var selectedRegion = regionSelect.value;
-                callback(null, { region: selectedRegion });
-            });
+            }
         }
     </script>
 </body>
