@@ -165,9 +165,15 @@ class AuxACDevice extends Homey.Device {
     this._registerOptionalCapabilityListener('temperature_unit', this.onCapabilityTemperatureUnit.bind(this));
     // Note: error_status is read-only, no listener needed
 
-    // Set available thermostat modes
+    // Set available thermostat modes with proper object format
     await this.setCapabilityOptions('thermostat_mode', {
-      values: ['auto', 'cool', 'heat', 'dry', 'fan_only']
+      values: [
+        { id: 'auto', title: { en: 'Auto' } },
+        { id: 'cool', title: { en: 'Cool' } },
+        { id: 'heat', title: { en: 'Heat' } },
+        { id: 'dry', title: { en: 'Dry' } },
+        { id: 'fan_only', title: { en: 'Fan Only' } }
+      ]
     }).catch(this.error);
 
     // Start polling for state updates
