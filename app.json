@@ -182,8 +182,8 @@
       },
       "pair": [
         {
-          "id": "login_credentials",
-          "file": "/drivers/aux-ac/pair/login_credentials.html",
+          "id": "login_view",
+          "file": "/drivers/aux-ac/pair/login_view.html",
           "navigation": {
             "next": "list_devices"
           }
