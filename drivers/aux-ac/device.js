@@ -603,6 +603,8 @@ class AuxACDevice extends Homey.Device {
       // Update temperature unit - with validation
       // Update temperature unit (but skip if user recently changed it manually)
       if (params.tempunit !== undefined && this.hasCapability('temperature_unit')) {
+        this.log(`Cloud reports tempunit: ${params.tempunit} (1=C, 0=F)`);
+
         // Skip sync if user changed it in the last 60 seconds
         const now = Date.now();
         const timeSinceUserChange = this._lastTempUnitChange ? (now - this._lastTempUnitChange) : Infinity;
@@ -1076,11 +1078,14 @@ class AuxACDevice extends Homey.Device {
       this._lastTempUnitChange = Date.now();
 
       // 1 = Celsius, 0 = Fahrenheit
+      const tempunitValue = value === 'celsius' ? 1 : 0;
       const params = {
-        tempunit: value === 'celsius' ? 1 : 0
+        tempunit: tempunitValue
       };
 
+      this.log(`Setting tempunit API parameter to: ${tempunitValue} (${value})`);
       const success = await this.api.setDeviceParams(this.deviceInfo, params);
+      this.log(`Temperature unit API call result: ${success ? 'SUCCESS' : 'FAILED'}`);
 
       if (!success) {
         throw new Error('Failed to set temperature unit');
