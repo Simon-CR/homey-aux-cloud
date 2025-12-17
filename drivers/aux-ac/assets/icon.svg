@@ -1,28 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- Homey-compatible AC device icon -->
-  <defs>
-    <linearGradient id="deviceBg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#00B8E6;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#0088B8;stop-opacity:1" />
-    </linearGradient>
-  </defs>
+  <!-- Simple solid-color AC icon for Homey -->
   
-  <!-- Background circle for better compatibility -->
-  <circle cx="50" cy="50" r="48" fill="url(#deviceBg)"/>
+  <!-- Blue circular background -->
+  <circle cx="50" cy="50" r="48" fill="#00A5D6"/>
   
-  <!-- AC Unit - white rounded rectangle -->
-  <rect x="20" y="30" width="60" height="28" rx="4" fill="#FFFFFF"/>
+  <!-- AC Unit body - white rounded rectangle -->
+  <rect x="20" y="32" width="60" height="26" rx="4" fill="#FFFFFF"/>
   
-  <!-- Vent lines -->
-  <line x1="28" y1="44" x2="72" y2="44" stroke="#666666" stroke-width="2" stroke-linecap="round"/>
-  <line x1="28" y1="49" x2="72" y2="49" stroke="#666666" stroke-width="2" stroke-linecap="round"/>
+  <!-- Vent lines - dark gray -->
+  <line x1="28" y1="43" x2="72" y2="43" stroke="#404040" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="28" y1="48" x2="72" y2="48" stroke="#404040" stroke-width="2.5" stroke-linecap="round"/>
   
-  <!-- LED indicator -->
+  <!-- LED indicator - green -->
   <circle cx="28" cy="37" r="2.5" fill="#00E676"/>
   
-  <!-- Airflow waves -->
-  <path d="M 30 65 Q 40 72, 50 65 Q 60 58, 70 65" 
-        stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.8"/>
-  <path d="M 35 72 Q 42 78, 50 72 Q 58 66, 65 72" 
-        stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
+  <!-- Cool airflow - simplified waves in white -->
+  <path d="M 30 65 Q 40 70, 50 65 Q 60 60, 70 65" 
+        stroke="#FFFFFF" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <path d="M 35 73 Q 42 77, 50 73 Q 58 69, 65 73" 
+        stroke="#FFFFFF" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.7"/>
 </svg>
