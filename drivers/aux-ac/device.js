@@ -111,21 +111,21 @@ class AuxACDevice extends Homey.Device {
     // Get stored settings
     const store = this.getStore();
     const data = this.getData();
-    
+
     this.deviceId = data.id;
     this.familyid = data.familyid;
-    
+
     // Track which optional capabilities this device supports
     this.supportedParams = new Set();
-    
+
     // Track swing position support (detected on first add)
     // Some units only support on/off swing, others support fixed positions (2-6)
     this.supportsVerticalPositions = store.supportsVerticalPositions || false;
     this.supportsHorizontalPositions = store.supportsHorizontalPositions || false;
-    
+
     // Initialize API
     this.api = new AuxCloudAPI(store.region || 'eu');
-    
+
     try {
       await this.api.login(store.email, store.password);
     } catch (error) {
@@ -148,7 +148,7 @@ class AuxACDevice extends Homey.Device {
     this.registerCapabilityListener('onoff', this.onCapabilityOnoff.bind(this));
     this.registerCapabilityListener('target_temperature', this.onCapabilityTargetTemperature.bind(this));
     this.registerCapabilityListener('thermostat_mode', this.onCapabilityThermostatMode.bind(this));
-    
+
     // Register optional capability listeners only if they exist
     this._registerOptionalCapabilityListener('fan_speed', this.onCapabilityFanSpeed.bind(this));
     this._registerOptionalCapabilityListener('airco_vertical', this.onCapabilitySwingVertical.bind(this));
@@ -185,13 +185,13 @@ class AuxACDevice extends Homey.Device {
 
     // Initial state sync - this will also detect which capabilities the device supports
     await this.syncDeviceState();
-    
+
     // Initial energy sync
     await this.syncEnergyData();
 
     // Update device settings with device info (MAC address, etc.)
     await this._updateDeviceInfo();
-    
+
     // Apply swing capability options based on stored detection results
     await this._updateSwingCapabilityOptions();
   }
@@ -220,9 +220,9 @@ class AuxACDevice extends Homey.Device {
 
       // Format swing position support display
       const verticalSupport = store.supportsVerticalPositions === true ? 'Supported' :
-                              store.supportsVerticalPositions === false ? 'Not Supported' : 'Unknown';
+        store.supportsVerticalPositions === false ? 'Not Supported' : 'Unknown';
       const horizontalSupport = store.supportsHorizontalPositions === true ? 'Supported' :
-                                store.supportsHorizontalPositions === false ? 'Not Supported' : 'Unknown';
+        store.supportsHorizontalPositions === false ? 'Not Supported' : 'Unknown';
 
       await this.setSettings({
         mac_address: macAddress,
@@ -254,7 +254,7 @@ class AuxACDevice extends Homey.Device {
    */
   async onAdded() {
     this.log('AUX AC device has been added');
-    
+
     // Detect swing position support
     await this._detectSwingPositionSupport();
   }
@@ -269,14 +269,14 @@ class AuxACDevice extends Homey.Device {
   async _detectSwingPositionSupport() {
     try {
       this.log('Detecting swing position support...');
-      
+
       // Get current swing values (use empty array to get all params since specific queries may not work)
       const params = await this.api.getDeviceParams(this.deviceInfo, []);
       const originalVdir = params.ac_vdir;
       const originalHdir = params.ac_hdir;
-      
+
       this.log(`Current swing values: vertical=${originalVdir}, horizontal=${originalHdir}`);
-      
+
       // Check vertical swing position support
       let supportsVertical = false;
       if (originalVdir >= 2 && originalVdir <= 6) {
@@ -287,7 +287,7 @@ class AuxACDevice extends Homey.Device {
         // Try setting to position 2 and see if it sticks
         await this.api.setDeviceParams(this.deviceInfo, { ac_vdir: 2 });
         await new Promise(r => this.homey.setTimeout(r, 3000));
-        
+
         const testParams = await this.api.getDeviceParams(this.deviceInfo, []);
         if (testParams.ac_vdir === 2) {
           supportsVertical = true;
@@ -295,11 +295,11 @@ class AuxACDevice extends Homey.Device {
         } else {
           this.log('Vertical positions NOT supported (test position rejected)');
         }
-        
+
         // Restore original value
         await this.api.setDeviceParams(this.deviceInfo, { ac_vdir: originalVdir });
       }
-      
+
       // Check horizontal swing position support
       let supportsHorizontal = false;
       if (originalHdir >= 2 && originalHdir <= 6) {
@@ -309,7 +309,7 @@ class AuxACDevice extends Homey.Device {
         // Try setting to position 2 and see if it sticks
         await this.api.setDeviceParams(this.deviceInfo, { ac_hdir: 2 });
         await new Promise(r => this.homey.setTimeout(r, 3000));
-        
+
         const testParams2 = await this.api.getDeviceParams(this.deviceInfo, []);
         if (testParams2.ac_hdir === 2) {
           supportsHorizontal = true;
@@ -317,23 +317,23 @@ class AuxACDevice extends Homey.Device {
         } else {
           this.log('Horizontal positions NOT supported (test position rejected)');
         }
-        
+
         // Restore original value
         await this.api.setDeviceParams(this.deviceInfo, { ac_hdir: originalHdir });
       }
-      
+
       // Store the results for future use
       this.supportsVerticalPositions = supportsVertical;
       this.supportsHorizontalPositions = supportsHorizontal;
-      
+
       await this.setStoreValue('supportsVerticalPositions', supportsVertical);
       await this.setStoreValue('supportsHorizontalPositions', supportsHorizontal);
-      
+
       this.log(`Swing position detection complete: vertical=${supportsVertical}, horizontal=${supportsHorizontal}`);
-      
+
       // Update capability options to hide position options if not supported
       await this._updateSwingCapabilityOptions();
-      
+
     } catch (error) {
       this.error('Failed to detect swing position support:', error);
     }
@@ -354,7 +354,7 @@ class AuxACDevice extends Homey.Device {
           ]
         });
       }
-      
+
       if (this.hasCapability('airco_horizontal') && !this.supportsHorizontalPositions) {
         this.log('Limiting horizontal swing to Fixed/Swing only');
         await this.setCapabilityOptions('airco_horizontal', {
@@ -388,7 +388,7 @@ class AuxACDevice extends Homey.Device {
    */
   async onDeleted() {
     this.log('AUX AC device has been deleted');
-    
+
     // Clear polling intervals
     if (this.pollInterval) {
       this.homey.clearInterval(this.pollInterval);
@@ -404,7 +404,7 @@ class AuxACDevice extends Homey.Device {
    */
   async onUninit() {
     this.log('AUX AC device is being uninitialized');
-    
+
     // Clear polling intervals
     if (this.pollInterval) {
       this.homey.clearInterval(this.pollInterval);
@@ -412,7 +412,7 @@ class AuxACDevice extends Homey.Device {
     if (this.energyPollInterval) {
       this.homey.clearInterval(this.energyPollInterval);
     }
-    
+
     // Clean up API instance
     if (this.api) {
       this.api = null;
@@ -429,7 +429,7 @@ class AuxACDevice extends Homey.Device {
       // The API now handles auto-relogin internally via _withRetry
       const families = await this.api.getFamilies();
       let foundDevice = null;
-      
+
       for (const family of families) {
         if (family.familyid === this.familyid) {
           const devices = await this.api.getDevices(family.familyid);
@@ -449,7 +449,7 @@ class AuxACDevice extends Homey.Device {
       if (foundDevice.cookie) {
         this.deviceInfo.cookie = foundDevice.cookie;
       }
-      
+
       // Check if device is online
       if (foundDevice.state !== 1) {
         this.setUnavailable('Device is offline').catch(this.error);
@@ -496,15 +496,23 @@ class AuxACDevice extends Homey.Device {
         }
       }
 
-      // Update swing modes - only if device supports them
+      // Update swing modes - only if device supports them AND value is valid
       if (params.ac_vdir !== undefined && this.hasCapability('airco_vertical')) {
-        const homeySwing = AUX_SWING_TO_HOMEY[params.ac_vdir] || 'off';
-        await this.setCapabilityValue('airco_vertical', homeySwing).catch(this.error);
+        const homeySwing = AUX_SWING_TO_HOMEY[params.ac_vdir];
+        if (homeySwing) {
+          await this.setCapabilityValue('airco_vertical', homeySwing).catch(this.error);
+        } else {
+          this.log(`Unknown vertical swing value: ${params.ac_vdir}, skipping update`);
+        }
       }
 
       if (params.ac_hdir !== undefined && this.hasCapability('airco_horizontal')) {
-        const homeySwing = AUX_SWING_TO_HOMEY[params.ac_hdir] || 'off';
-        await this.setCapabilityValue('airco_horizontal', homeySwing).catch(this.error);
+        const homeySwing = AUX_SWING_TO_HOMEY[params.ac_hdir];
+        if (homeySwing) {
+          await this.setCapabilityValue('airco_horizontal', homeySwing).catch(this.error);
+        } else {
+          this.log(`Unknown horizontal swing value: ${params.ac_hdir}, skipping update`);
+        }
       }
 
       // Update toggle capabilities - only if device supports them
@@ -570,10 +578,10 @@ class AuxACDevice extends Homey.Device {
 
     } catch (error) {
       this.error('Failed to sync device state:', error);
-      
+
       // Track consecutive failures for smarter error handling
       this._syncFailures = (this._syncFailures || 0) + 1;
-      
+
       // Only mark unavailable after multiple consecutive failures
       // This prevents transient network issues from causing device flicker
       if (this._syncFailures >= 3) {
@@ -609,7 +617,7 @@ class AuxACDevice extends Homey.Device {
 
       if (result.status === 0 && result.table && result.table.length > 0) {
         const deviceData = result.table[0];
-        
+
         // Sum up all monthly values to get yearly total
         let totalEnergy = 0;
         if (deviceData.values && deviceData.values.length > 0) {
@@ -624,7 +632,7 @@ class AuxACDevice extends Homey.Device {
         // Update meter_power capability (in kWh)
         await this.setCapabilityValue('meter_power', totalEnergy).catch(this.error);
         this.log(`Energy data updated: ${totalEnergy.toFixed(2)} kWh (${year})`);
-        
+
         // Reset energy sync failures on success
         this._energySyncFailures = 0;
       } else {
@@ -633,10 +641,10 @@ class AuxACDevice extends Homey.Device {
 
     } catch (error) {
       this.error('Failed to sync energy data:', error);
-      
+
       // Track failures but don't mark device unavailable for energy sync issues
       this._energySyncFailures = (this._energySyncFailures || 0) + 1;
-      
+
       // If energy data consistently fails, log it but continue
       if (this._energySyncFailures >= 3) {
         this.log('Energy data sync repeatedly failed - device may not support energy monitoring');
@@ -650,12 +658,12 @@ class AuxACDevice extends Homey.Device {
    */
   async _updateDynamicCapabilities(params) {
     const reportedParams = Object.keys(params);
-    
+
     // Check each param -> capability mapping
     for (const [param, capability] of Object.entries(PARAM_TO_CAPABILITY)) {
       const deviceSupportsParam = reportedParams.includes(param);
       const hasCapability = this.hasCapability(capability);
-      
+
       if (deviceSupportsParam && !hasCapability) {
         // Device supports this param but we don't have the capability - add it
         this.log(`Adding capability ${capability} (device reports ${param})`);
@@ -716,7 +724,7 @@ class AuxACDevice extends Homey.Device {
       };
 
       const success = await this.api.setDeviceParams(this.deviceInfo, params);
-      
+
       if (!success) {
         throw new Error('Failed to set power state');
       }
@@ -746,7 +754,7 @@ class AuxACDevice extends Homey.Device {
       };
 
       const success = await this.api.setDeviceParams(this.deviceInfo, params);
-      
+
       if (!success) {
         throw new Error('Failed to set temperature');
       }
@@ -771,7 +779,7 @@ class AuxACDevice extends Homey.Device {
 
     try {
       const auxMode = HOMEY_MODE_TO_AUX[value];
-      
+
       if (auxMode === undefined) {
         throw new Error('Invalid mode');
       }
@@ -781,7 +789,7 @@ class AuxACDevice extends Homey.Device {
       };
 
       const success = await this.api.setDeviceParams(this.deviceInfo, params);
-      
+
       if (!success) {
         throw new Error('Failed to set mode');
       }
@@ -806,7 +814,7 @@ class AuxACDevice extends Homey.Device {
 
     try {
       const auxFan = HOMEY_FAN_TO_AUX[value];
-      
+
       if (auxFan === undefined) {
         throw new Error('Invalid fan speed');
       }
@@ -816,7 +824,7 @@ class AuxACDevice extends Homey.Device {
       };
 
       const success = await this.api.setDeviceParams(this.deviceInfo, params);
-      
+
       if (!success) {
         throw new Error('Failed to set fan speed');
       }
@@ -840,7 +848,7 @@ class AuxACDevice extends Homey.Device {
 
     try {
       const auxSwing = HOMEY_SWING_TO_AUX[value];
-      
+
       if (auxSwing === undefined) {
         throw new Error('Invalid swing position');
       }
@@ -850,7 +858,7 @@ class AuxACDevice extends Homey.Device {
       };
 
       const success = await this.api.setDeviceParams(this.deviceInfo, params);
-      
+
       if (!success) {
         throw new Error('Failed to set swing position');
       }
@@ -874,7 +882,7 @@ class AuxACDevice extends Homey.Device {
 
     try {
       const auxSwing = HOMEY_SWING_TO_AUX[value];
-      
+
       if (auxSwing === undefined) {
         throw new Error('Invalid swing position');
       }
@@ -884,7 +892,7 @@ class AuxACDevice extends Homey.Device {
       };
 
       const success = await this.api.setDeviceParams(this.deviceInfo, params);
-      
+
       if (!success) {
         throw new Error('Failed to set swing position');
       }
@@ -975,7 +983,7 @@ class AuxACDevice extends Homey.Device {
       };
 
       const success = await this.api.setDeviceParams(this.deviceInfo, params);
-      
+
       if (!success) {
         throw new Error('Failed to set power limit');
       }
@@ -1011,7 +1019,7 @@ class AuxACDevice extends Homey.Device {
       };
 
       const success = await this.api.setDeviceParams(this.deviceInfo, params);
-      
+
       if (!success) {
         throw new Error('Failed to set temperature unit');
       }
@@ -1039,7 +1047,7 @@ class AuxACDevice extends Homey.Device {
       };
 
       const success = await this.api.setDeviceParams(this.deviceInfo, params);
-      
+
       if (!success) {
         throw new Error(`Failed to set ${capabilityName}`);
       }
