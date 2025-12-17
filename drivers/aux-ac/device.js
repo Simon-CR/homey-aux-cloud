@@ -287,8 +287,10 @@ class AuxACDevice extends Homey.Device {
     try {
       this.log('Detecting swing position support...');
 
-      // Get current swing values (use empty array to get all params since specific queries may not work)
-      const params = await this.api.getDeviceParams(this.deviceInfo, []);
+      // Fetch device parameters
+      // Important: include "mode" parameter to get envtemp (ambient temperature) in the response
+      // This is required by the AUX cloud API to return current temperature
+      const params = await this.api.getDeviceParams(this.deviceInfo, ['mode']);
       const originalVdir = params.ac_vdir;
       const originalHdir = params.ac_hdir;
 
