@@ -750,7 +750,11 @@ class AuxACDevice extends Homey.Device {
 
         // Create Insights log entry for energy tracking
         try {
-          const meterLog = await this.homey.insights.createLog('meter_power', { title: 'Power Consumption' });
+          const meterLog = await this.homey.insights.createLog('meter_power', {
+            title: 'Power Consumption',
+            type: 'number',
+            units: 'kWh'
+          });
           await meterLog.createEntry({ value: totalEnergy });
           this.log(`Energy data logged to Insights: ${totalEnergy.toFixed(2)} kWh`);
         } catch (err) {
