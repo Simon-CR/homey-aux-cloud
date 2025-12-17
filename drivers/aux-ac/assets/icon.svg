@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- Simple, clean AC device icon for device tiles -->
+  <!-- Homey-compatible AC device icon -->
   <defs>
     <linearGradient id="deviceBg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#00B8E6;stop-opacity:1" />
@@ -7,22 +7,22 @@
     </linearGradient>
   </defs>
   
-  <!-- Background -->
-  <rect x="0" y="0" width="100" height="100" rx="12" ry="12" fill="url(#deviceBg)"/>
+  <!-- Background circle for better compatibility -->
+  <circle cx="50" cy="50" r="48" fill="url(#deviceBg)"/>
   
   <!-- AC Unit - white rounded rectangle -->
-  <rect x="12" y="25" width="76" height="40" rx="6" ry="6" fill="#FFFFFF"/>
+  <rect x="20" y="30" width="60" height="28" rx="4" fill="#FFFFFF"/>
   
   <!-- Vent lines -->
-  <line x1="22" y1="50" x2="78" y2="50" stroke="#B8B8B8" stroke-width="2" stroke-linecap="round"/>
-  <line x1="22" y1="56" x2="78" y2="56" stroke="#B8B8B8" stroke-width="2" stroke-linecap="round"/>
+  <line x1="28" y1="44" x2="72" y2="44" stroke="#666666" stroke-width="2" stroke-linecap="round"/>
+  <line x1="28" y1="49" x2="72" y2="49" stroke="#666666" stroke-width="2" stroke-linecap="round"/>
   
-  <!-- LED -->
-  <circle cx="22" cy="35" r="3" fill="#00E676"/>
+  <!-- LED indicator -->
+  <circle cx="28" cy="37" r="2.5" fill="#00E676"/>
   
-  <!-- Airflow -->
-  <path d="M 25 72 Q 37 80, 50 72 Q 63 64, 75 72" 
-        stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.9"/>
-  <path d="M 30 82 Q 42 90, 55 82 Q 68 74, 80 82" 
-        stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <!-- Airflow waves -->
+  <path d="M 30 65 Q 40 72, 50 65 Q 60 58, 70 65" 
+        stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.8"/>
+  <path d="M 35 72 Q 42 78, 50 72 Q 58 66, 65 72" 
+        stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
 </svg>
