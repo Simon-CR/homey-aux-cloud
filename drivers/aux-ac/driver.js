@@ -92,15 +92,6 @@ class AuxACDriver extends Homey.Driver {
                   devicetypeFlag: device.devicetypeFlag,
                   cookie: device.cookie,
                   devSession: device.devSession
-                },
-                // Set initial safe values for all picker capabilities at creation time
-                // This prevents React UI crashes from undefined/null values
-                capabilities: {
-                  thermostat_mode: 'auto',
-                  fan_speed: 'auto',
-                  airco_vertical: 'off',
-                  airco_horizontal: 'off',
-                  temperature_unit: 'celsius'
                 }
               });
             } else {
