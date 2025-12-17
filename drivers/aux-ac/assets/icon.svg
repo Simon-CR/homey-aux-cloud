@@ -1,22 +1,42 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- Simple solid-color AC icon for Homey -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Background circle with gradient -->
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00B8E6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0088B8;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="acGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E8E8E8;stop-opacity:1" />
+    </linearGradient>
+  </defs>
   
-  <!-- Blue circular background -->
-  <circle cx="50" cy="50" r="48" fill="#00A5D6"/>
+  <!-- Main circle background -->
+  <circle cx="100" cy="100" r="95" fill="url(#bgGrad)"/>
   
-  <!-- AC Unit body - white rounded rectangle -->
-  <rect x="20" y="32" width="60" height="26" rx="4" fill="#FFFFFF"/>
+  <!-- AC Unit body -->
+  <rect x="35" y="55" width="130" height="75" rx="8" ry="8" fill="url(#acGrad)" stroke="#CCCCCC" stroke-width="1"/>
   
-  <!-- Vent lines - dark gray -->
-  <line x1="28" y1="43" x2="72" y2="43" stroke="#404040" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="28" y1="48" x2="72" y2="48" stroke="#404040" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Air vent lines -->
+  <line x1="50" y1="100" x2="150" y2="100" stroke="#B0B0B0" stroke-width="2" stroke-linecap="round"/>
+  <line x1="50" y1="108" x2="150" y2="108" stroke="#B0B0B0" stroke-width="2" stroke-linecap="round"/>
+  <line x1="50" y1="116" x2="150" y2="116" stroke="#B0B0B0" stroke-width="2" stroke-linecap="round"/>
   
-  <!-- LED indicator - green -->
-  <circle cx="28" cy="37" r="2.5" fill="#00E676"/>
+  <!-- LED indicator -->
+  <circle cx="55" cy="70" r="4" fill="#00E676"/>
   
-  <!-- Cool airflow - simplified waves in white -->
-  <path d="M 30 65 Q 40 70, 50 65 Q 60 60, 70 65" 
-        stroke="#FFFFFF" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-  <path d="M 35 73 Q 42 77, 50 73 Q 58 69, 65 73" 
-        stroke="#FFFFFF" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.7"/>
+  <!-- Display panel -->
+  <rect x="70" y="65" width="60" height="20" rx="3" ry="3" fill="#1A237E" opacity="0.8"/>
+  <text x="100" y="80" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#4FC3F7" text-anchor="middle">22°C</text>
+  
+  <!-- Airflow waves -->
+  <path d="M 55 140 Q 70 150, 85 140 Q 100 130, 115 140 Q 130 150, 145 140" 
+        stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.8"/>
+  <path d="M 65 152 Q 80 162, 95 152 Q 110 142, 125 152 Q 140 162, 155 152" 
+        stroke="#FFFFFF" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <path d="M 75 163 Q 90 173, 105 163 Q 120 153, 135 163" 
+        stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.4"/>
+  
+  <!-- AUX text at bottom -->
+  <text x="100" y="188" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#FFFFFF" text-anchor="middle">AUX</text>
 </svg>
