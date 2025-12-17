@@ -172,6 +172,26 @@ class AuxACDevice extends Homey.Device {
       values: ['auto', 'cool', 'heat', 'dry', 'fan_only']
     }).catch(this.error);
 
+    // Initialize vane capabilities with safe defaults to prevent React crashes
+    // This ensures no invalid values are present from previous versions
+    if (this.hasCapability('airco_vertical')) {
+      const currentVertical = this.getCapabilityValue('airco_vertical');
+      const validValues = ['off', 'on', 'pos1', 'pos2', 'pos3', 'pos4', 'pos5'];
+      if (!validValues.includes(currentVertical)) {
+        this.log(`Resetting invalid vertical swing value: ${currentVertical} -> off`);
+        await this.setCapabilityValue('airco_vertical', 'off').catch(this.error);
+      }
+    }
+
+    if (this.hasCapability('airco_horizontal')) {
+      const currentHorizontal = this.getCapabilityValue('airco_horizontal');
+      const validValues = ['off', 'on', 'pos1', 'pos2', 'pos3', 'pos4', 'pos5'];
+      if (!validValues.includes(currentHorizontal)) {
+        this.log(`Resetting invalid horizontal swing value: ${currentHorizontal} -> off`);
+        await this.setCapabilityValue('airco_horizontal', 'off').catch(this.error);
+      }
+    }
+
     // Start polling for state updates
     // Use this.homey.setInterval for automatic cleanup on Homey Cloud
     this.pollInterval = this.homey.setInterval(() => {
